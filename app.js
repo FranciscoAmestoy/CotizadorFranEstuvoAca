@@ -308,11 +308,11 @@
     if (state.clientName) {
       titleEl.textContent = `¡Hola ${state.clientName}! 👋 Armá tu presupuesto a medida`;
       subtitleEl.textContent =
-        "Elegí los servicios que te interesan, probá distintas combinaciones y mirá el precio final al instante.";
+        "Elegí los servicios que te interesan, combinalos como quieras y mirá cuánto ahorrás!.";
     } else {
       titleEl.textContent = "Calculá tu Presupuesto a Medida al Instante";
       subtitleEl.textContent =
-        "Sin vueltas ni palabras raras: elegí qué necesita tu negocio, ajustá cantidades y mirá cuánto ahorrás.";
+        "Elegí qué necesita tu negocio, ajustá las cantidades y mirá cuánto ahorrás!.";
     }
 
     if (state.customNote) {
@@ -344,8 +344,8 @@
     const container = document.getElementById("step-1-content");
     let html = `
       <div class="section-header-box">
-        <h2>Paso 1: ¿Qué servicios te gustaría cotizar?</h2>
-        <p>Marcá las opciones que te interesen para tu negocio (podés elegir una o combinar varias). Luego tocá <strong>"Siguiente"</strong> abajo para elegir cantidades, meses y ver los precios.</p>
+        <h2>Paso 1: ¿Qué servicios te gustaría contratar?</h2>
+        <p>Marcá las opciones que te interesen para tu negocio. Luego tocá <strong>"Siguiente"</strong> abajo para elegir cantidades, meses y ver los precios.</p>
       </div>
     `;
 
@@ -362,7 +362,7 @@
             <div class="category-group-title">
               <span>🎬 Videos para Redes Sociales</span>
             </div>
-            <span class="category-rule-badge">Elegí 1 de las 2 opciones (según quién grabe)</span>
+            <span class="category-rule-badge">Elegí 1 de las 2 opciones a continuación</span>
           </div>
 
           <div class="service-cards-grid">

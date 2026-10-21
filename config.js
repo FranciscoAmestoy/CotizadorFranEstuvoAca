@@ -14,12 +14,14 @@ window.COTIZADOR_CONFIG = {
 
   // Nombre de tu marca
   brandName: "Fran Estuvo Acá",
-  brandTagline: "Contenido y herramientas digitales para que tu negocio venda más",
+  brandTagline:
+    "Contenido y herramientas digitales para que tu negocio venda más",
 
   // Hash SHA-256 ofuscado de tu clave Admin (nunca se guarda la clave en texto plano)
   adminPinSalt: "fea_salt_",
   adminPinSuffix: "_v1",
-  adminPinHash: "a829ec6bf756e3bc02c606d8e1b12a783c0e2c38b5bb2d887f85d17f6b3e71a3",
+  adminPinHash:
+    "a829ec6bf756e3bc02c606d8e1b12a783c0e2c38b5bb2d887f85d17f6b3e71a3",
 
   // --------------------------------------------------------------------------
   // 1. CONFIGURACIÓN DE VIDEOS (Parámetro URL: v)
@@ -29,39 +31,36 @@ window.COTIZADOR_CONFIG = {
       graboEdiPubli: {
         id: "graboEdiPubli",
         nombre: "Grabación + Edición + Publicación",
-        nombreCorto: "Yo voy, grabo, edito y publico",
+        nombreCorto: "Fran va, graba, edita y publica",
         precioBase: 50000,
         requiereTraslado: true,
-        badge: "Servicio Completo (Me ocupo de todo)",
+        badge: "Servicio Completo",
         enCriolloTitulo: "¿Qué es y para qué te sirve?",
         enCriolloTexto:
-          "Es como si un cliente pudiera visitar tu negocio desde su celular antes de llamarte. Yo voy personalmente a tu empresa o local, filmo tus productos o servicios en acción, lo edito de forma profesional y lo subo a las redes para que la gente vea cómo trabajás, confíe en vos y te escriba para comprar.",
+          "Fran va personalmente a tu empresa o local, filma tus productos o servicios en acción, luego se edita de forma profesional y se comparte en redes para que la gente vea cómo trabajás.",
         incluye: [
-          "Visita presencial a tu negocio o lugar de trabajo",
-          "Idea y guion simple pensado para vender (no tenés que saber actuar)",
           "Filmación profesional de tus productos, servicios o equipo",
           "Edición dinámica con subtítulos, música y buena calidad",
-          "Publicación lista en tus redes sociales"
-        ]
+          "Publicación lista en redes sociales",
+        ],
       },
       ediPubli: {
         id: "ediPubli",
-        nombre: "Edición + Publicación (Con tus videos)",
-        nombreCorto: "Vos grabás el crudo, yo edito y publico",
+        nombre: "Edición + Publicación",
+        nombreCorto: "Vos aportás los videos, yo edito y publico",
         precioBase: 35000,
         requiereTraslado: false,
-        badge: "Más Económico (Sin traslado)",
+        badge: "Más Económico (Sin traslados)",
         enCriolloTitulo: "¿Qué es y para qué te sirve?",
         enCriolloTexto:
-          "Ideal si vos ya tenés videos grabados con tu celular (o te animás a grabarlos cuando estás trabajando) pero no tenés tiempo ni ganas de ponerte a editarlos. Me mandás los videos sueltos por WhatsApp y yo los transformo en un video profesional listo para atraer clientes.",
+          "Ideal si vos ya tenés videos grabados pero no tenés tiempo ni ganas de ponerte a editarlos. Fran los compila, edita y transforma en un video profesional listo para atraer clientes.",
         incluye: [
-          "Recibo tus videos crudos grabados con tu celular",
           "Selección de las mejores tomas y recorte de tiempos muertos",
           "Edición profesional con títulos llamativos, subtítulos y música",
           "Armado del texto vendedor para acompañar el video",
-          "Publicación lista en tus redes sociales"
-        ]
-      }
+          "Publicación lista en tus redes sociales",
+        ],
+      },
     },
 
     // Descuento escalonado por cada video adicional en el mismo mes:
@@ -72,11 +71,11 @@ window.COTIZADOR_CONFIG = {
       { unidad: 3, descuentoPct: 20 },
       { unidad: 4, descuentoPct: 30 },
       { unidad: 5, descuentoPct: 40 },
-      { unidad: 6, descuentoPct: 50 } // Del 6to en adelante se mantiene en 50%
+      { unidad: 6, descuentoPct: 50 }, // Del 6to en adelante se mantiene en 50%
     ],
 
     // Cantidades rápidas para mostrar en los botones y en la matriz
-    cantidadesSugeridas: [1, 2, 3, 4, 5, 6, 8, 10]
+    cantidadesSugeridas: [1, 2, 3, 4, 5, 6, 8, 10],
   },
 
   // --------------------------------------------------------------------------
@@ -88,14 +87,14 @@ window.COTIZADOR_CONFIG = {
       descuentoPct: 0,
       etiqueta: "1 Mes",
       subtitulo: "Para probar sin compromiso",
-      destacado: false
+      destacado: false,
     },
     {
       meses: 2,
       descuentoPct: 10,
       etiqueta: "2 Meses",
       subtitulo: "10% OFF en el total + Congelás precio",
-      destacado: false
+      destacado: false,
     },
     {
       meses: 3,
@@ -103,7 +102,7 @@ window.COTIZADOR_CONFIG = {
       etiqueta: "3 Meses",
       subtitulo: "20% OFF en el total + Congelás precio",
       badge: "⭐ Más elegido",
-      destacado: true
+      destacado: true,
     },
     {
       meses: 6,
@@ -111,8 +110,8 @@ window.COTIZADOR_CONFIG = {
       etiqueta: "6 Meses",
       subtitulo: "30% OFF en el total + Congelás precio",
       badge: "🔥 Máximo ahorro",
-      destacado: false
-    }
+      destacado: false,
+    },
   ],
 
   // --------------------------------------------------------------------------
@@ -121,7 +120,7 @@ window.COTIZADOR_CONFIG = {
   cm: {
     tituloSeccion: "Manejo de Redes Sociales (Community Manager)",
     enCriolloGeneral:
-      "Hoy, antes de comprarte o pedirte un presupuesto, la gente te busca en Google, Instagram o Facebook. Si no estás o tu página tiene la última foto hace 2 años, piensan que cerraste y llaman a otro. Con este servicio tu negocio tiene su 'vidriera en internet' abierta, limpia y atendida todas las semanas sin que vos pierdas tiempo.",
+      "Hoy, antes de comprarte o pedirte un presupuesto la gente te busca en Google, Instagram o Facebook. Si no estás o tu página está inactiva se lleva una primera impresión que tal vez no sea la mejor. Con este servicio mantenés tu negocio activo sin que vos pierdas tiempo.",
     planes: [
       {
         id: "presencia",
@@ -134,7 +133,7 @@ window.COTIZADOR_CONFIG = {
           "🎬 1 Reel / video por semana (~4 al mes)",
           "🖼️ 1 publicación adicional por semana (carrusel, foto o placa)",
           "📱 Historias 3 días por semana + Alta en Google Maps",
-          "💬 Respuesta básica de comentarios y mensajes (1 vez/semana)"
+          "💬 Respuesta básica de comentarios y mensajes (1 vez/semana)",
         ],
         detalleCompleto: [
           "Estrategia y planificación mensual de contenido.",
@@ -150,8 +149,8 @@ window.COTIZADOR_CONFIG = {
           "Optimización de textos, títulos y llamados a la acción.",
           "Respuesta y moderación básica de comentarios y mensajes 1 vez / semana.",
           "Revisión mensual de estadísticas.",
-          "Informe mensual sencillo con resultados y observaciones."
-        ]
+          "Informe mensual sencillo con resultados y observaciones.",
+        ],
       },
       {
         id: "crecimiento",
@@ -165,7 +164,7 @@ window.COTIZADOR_CONFIG = {
           "🎬 2 a 3 Reels / videos por semana (~8 a 12 al mes)",
           "🖼️ 1 a 2 publicaciones gráficas por semana + Historias 5 días/sem",
           "💬 Gestión de comentarios y mensajes 3 veces por semana",
-          "📈 Análisis semanal de métricas + Investigación de tendencias"
+          "📈 Análisis semanal de métricas + Investigación de tendencias",
         ],
         detalleCompleto: [
           "Estrategia y planificación mensual de contenido.",
@@ -183,8 +182,8 @@ window.COTIZADOR_CONFIG = {
           "Análisis semanal de métricas.",
           "Informe mensual + propuestas de mejora para el mes siguiente.",
           "Investigación de tendencias y audios.",
-          "Adaptación de contenido según lo que mejor funcione en la cuenta."
-        ]
+          "Adaptación de contenido según lo que mejor funcione en la cuenta.",
+        ],
       },
       {
         id: "total",
@@ -197,7 +196,7 @@ window.COTIZADOR_CONFIG = {
           "🎬 5 Reels / videos por semana (~20 al mes) con guiones e ideas",
           "🖼️ Publicaciones gráficas y carruseles + Historias de Lunes a Viernes",
           "💬 Gestión DIARIA de comentarios y mensajes",
-          "🤝 Informe detallado + Reunión mensual + Campañas y promociones"
+          "🤝 Informe detallado + Reunión mensual + Campañas y promociones",
         ],
         detalleCompleto: [
           "Estrategia y planificación mensual de contenido.",
@@ -220,10 +219,10 @@ window.COTIZADOR_CONFIG = {
           "Calendario editorial completo.",
           "Ideas, conceptos y guiones para videos.",
           "Interacción activa con la comunidad.",
-          "Propuestas de campañas, promociones y fechas especiales."
-        ]
-      }
-    ]
+          "Propuestas de campañas, promociones y fechas especiales.",
+        ],
+      },
+    ],
   },
 
   // --------------------------------------------------------------------------
@@ -232,7 +231,7 @@ window.COTIZADOR_CONFIG = {
   tienda: {
     tituloSeccion: "Catálogo Digital / Tienda Online (Pago Único)",
     enCriolloGeneral:
-      "¿Te pasa que perdés media hora por WhatsApp explicando qué tenés, pasando fotos sueltas y precios a cada persona que pregunta? Un catálogo digital es un mostrador abierto las 24 hs: mandás un solo link y el cliente ve fotos, características y precios listos para encargarte.",
+      "Un catálogo digital es un mostrador abierto las 24 hs: mandás un solo link y el cliente ve fotos, características y precios listos para encargarte.",
     opciones: [
       {
         id: "catalogoWsp",
@@ -247,8 +246,8 @@ window.COTIZADOR_CONFIG = {
           "Armado completo del catálogo dentro de tu WhatsApp Business",
           "Organización por precios, categorías y descripciones vendedoras",
           "Pago por única vez (queda tuyo para siempre)",
-          "Traslado se cobra aparte según zona"
-        ]
+          "Traslado se cobra aparte según zona",
+        ],
       },
       {
         id: "tiendaNube",
@@ -263,10 +262,10 @@ window.COTIZADOR_CONFIG = {
           "Conexión de medios de pago (Mercado Pago / transferencia)",
           "Configuración de medios de envío o retiro",
           "Carga de hasta 30 productos con fotos optimizadas y descripción",
-          "Pago por única vez • Traslado se cobra aparte según zona"
-        ]
-      }
-    ]
+          "Pago por única vez • Traslado se cobra aparte según zona",
+        ],
+      },
+    ],
   },
 
   // --------------------------------------------------------------------------
@@ -279,6 +278,6 @@ window.COTIZADOR_CONFIG = {
     codigoCupon: "FRANESTUVOACA",
     titulo: "🎁 Beneficio Exclusivo: 10% OFF en Imprenta Inucorn",
     descripcion:
-      "Contratando cualquiera de mis servicios, tenés un 10% de descuento en servicios de imprenta (folletos, tarjetas personales, stickers, cartelería y gráfica para tu negocio) mencionando el código FRANESTUVOACA."
-  }
+      "Contratando cualquiera de mis servicios, tenés un 10% de descuento en servicios de imprenta (folletos, tarjetas personales, stickers, cartelería y gráfica para tu negocio) mencionando el código FRANESTUVOACA.",
+  },
 };
