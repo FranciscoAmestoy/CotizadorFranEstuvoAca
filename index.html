@@ -2,83 +2,77 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Presupuestador | Fran Estuvo Acá</title>
-  <meta name="description" content="Armá tu presupuesto al instante!" />
+  <meta name="description" content="Armá tu presupuesto interactivo paso a paso y al instante." />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-  <!-- ENCABEZADO PRINCIPAL -->
-  <header class="site-header">
-    <div class="header-inner">
-      <div class="brand-pill"> PRESUPUESTADOR • FRAN ESTUVO ACÁ</div>
-      <h1 id="hero-title" class="hero-title">Calculá tu Presupuesto a continuación:</h1>
-      <p id="hero-subtitle" class="hero-subtitle">
-        Elegí qué necesita tu negocio, probá opciones y mirá cuánto ahorrás.
-      </p>
-      <div id="custom-note-banner" class="custom-note-banner" style="display: none;"></div>
+  <!-- BARRA SUPERIOR FIJA: PROGRESO Y NAVEGACIÓN -->
+  <header class="wizard-header">
+    <div class="wizard-header-inner">
+      <div class="nav-left">
+        <button type="button" id="btn-back" class="nav-back-btn" data-action="prev-step" style="visibility: hidden;">
+          ← Volver
+        </button>
+      </div>
+
+      <div class="nav-center">
+        <div class="progress-label" id="progress-label">Paso 1</div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" id="progress-bar-fill" style="width: 20%;"></div>
+        </div>
+      </div>
+
+      <div class="nav-right">
+        <div class="header-brand-pill" id="header-brand-badge">Fran Estuvo Acá</div>
+      </div>
     </div>
   </header>
 
-  <!-- CONTENEDOR DEL FUNNEL -->
-  <main class="container">
-    <!-- BARRA DE PASOS (1, 2, 3) -->
-    <nav class="stepper" aria-label="Pasos del presupuesto">
-      <button type="button" id="step-tab-1" class="step-tab active" data-action="goto-step" data-step="1">
-        <span class="step-number">1</span>
-        <span>Elegí Servicios</span>
-      </button>
-      <button type="button" id="step-tab-2" class="step-tab" data-action="goto-step" data-step="2">
-        <span class="step-number">2</span>
-        <span>Cantidades y Meses</span>
-      </button>
-      <button type="button" id="step-tab-3" class="step-tab" data-action="goto-step" data-step="3">
-        <span class="step-number">3</span>
-        <span>Resumen y Enviar</span>
-      </button>
-    </nav>
-
-    <!-- CONTENIDO DE CADA PASO -->
-    <section id="step-1-content"></section>
-    <section id="step-2-content" style="display: none;"></section>
-    <section id="step-3-content" style="display: none;"></section>
-
-    <!-- ACCESO DISCRETO A MODO ADMIN -->
-    <footer class="admin-footer-trigger">
-      <span>Fran Estuvo Acá • Cotizador Web</span>
-      <button type="button" class="admin-lock-btn" data-action="open-admin">Mantenimiento</button>
-    </footer>
+  <!-- CONTENEDOR PRINCIPAL DEL PASO ACTUAL (FULLSCREEN / ONE-PAGE) -->
+  <main class="wizard-main">
+    <div class="wizard-card-wrapper" id="wizard-card-wrapper">
+      <!-- El contenido del paso activo se inyecta dinámicamente con app.js -->
+      <div id="step-render-area"></div>
+    </div>
   </main>
 
-  <!-- BARRA FLOTANTE INFERIOR (TOTAL EN VIVO + BOTÓN CONTINUAR) -->
-  <div class="sticky-bottom-bar">
-    <div class="sticky-inner">
-      <div class="sticky-total-info">
-        <span class="sticky-label">Total estimado</span>
-        <span id="sticky-amount" class="sticky-amount">$0</span>
-        <span id="sticky-savings" class="sticky-savings"></span>
+  <!-- BARRA FLOTANTE INFERIOR: TOTAL ACUMULADO EN VIVO -->
+  <footer class="wizard-bottom-bar" id="wizard-bottom-bar">
+    <div class="wizard-bottom-inner">
+      <div class="bottom-total-col">
+        <span class="bottom-label" id="bottom-label">Total estimado</span>
+        <span class="bottom-amount" id="bottom-amount">$0</span>
       </div>
-      <div id="sticky-actions" class="sticky-actions"></div>
+      <div class="bottom-savings-col">
+        <span class="bottom-savings-badge" id="bottom-savings" style="display: none;"></span>
+      </div>
     </div>
+  </footer>
+
+  <!-- PIE DISCRETO PARA MANTENIMIENTO / ADMIN -->
+  <div class="footer-maintenance-link">
+    <button type="button" class="admin-lock-btn" data-action="open-admin">🔒 Mantenimiento</button>
   </div>
 
-  <!-- MODAL DE MODO ADMIN (PROTEGIDO CON HASH SHA-256 OFUSCADO) -->
+  <!-- MODAL DE MANTENIMIENTO / GENERADOR DE LINKS (PROTEGIDO) -->
   <div id="admin-modal" class="modal-overlay hidden">
     <div class="modal-card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <h3 style="font-size:1.3rem; font-weight:900;">Mantenimiento</h3>
+        <h3 style="font-size:1.3rem; font-weight:900;">🔒 Mantenimiento (Armador de Links)</h3>
         <button type="button" class="btn-secondary" style="padding:6px 12px;" data-action="close-admin">✕ Cerrar</button>
       </div>
 
       <!-- VISTA 1: LOGIN CON CLAVE -->
       <div id="admin-login-view">
         <p style="color:var(--text-secondary); margin-bottom:12px;">
-          Ingresá la clave de mantenimiento.
+          Ingresá la clave de mantenimiento para abrir el generador de links personalizados.
         </p>
         <div class="form-group">
           <label for="admin-pin-input">Contraseña</label>
-          <input type="password" id="admin-pin-input" class="form-input" placeholder="Ingresá tu clave..." inputmode="numeric" />
+          <input type="password" id="admin-pin-input" class="form-input" placeholder="Ingresá la clave..." inputmode="numeric" />
           <p id="admin-pin-error" style="color:#dc2626; font-weight:700; font-size:0.9rem; margin-top:6px; display:none;"></p>
         </div>
         <button type="button" class="btn-primary" style="width:100%; justify-content:center;" data-action="verify-admin-pin">
@@ -89,7 +83,7 @@
       <!-- VISTA 2: GENERADOR DE LINKS PERSONALIZADOS -->
       <div id="admin-panel-view" style="display: none;">
         <div class="form-group">
-          <label>1. ¿Qué módulos querés habilitar a este cliente?</label>
+          <label>1. ¿Qué módulos querés habilitar en el recorrido de este cliente?</label>
           <div class="checkbox-row">
             <label class="checkbox-pill">
               <input type="checkbox" id="adm-chk-v" checked />
@@ -111,20 +105,20 @@
         </div>
 
         <div class="form-group">
-          <label for="adm-client-name">2. Nombre del Cliente o Negocio (Opcional, para el saludo y el WhatsApp)</label>
+          <label for="adm-client-name">2. Nombre del Cliente o Negocio (Para el saludo y WhatsApp)</label>
           <input type="text" id="adm-client-name" class="form-input" placeholder="Ej: Conte-GEN" />
         </div>
 
         <div class="form-group">
           <label for="adm-client-note">3. Nota o explicación personalizada arriba de todo (Opcional)</label>
-          <input type="text" id="adm-client-note" class="form-input" placeholder="Ej: Opciones pensadas para mostrar los contenedores en stock y recibir consultas" />
+          <input type="text" id="adm-client-note" class="form-input" placeholder="Ej: Pensado para mostrar los contenedores en stock y generar consultas" />
         </div>
 
         <div class="form-group">
           <label for="adm-uber-cost">4. Costo de 1 viaje de Uber (Solo ida) hasta el cliente (Opcional)</label>
-          <input type="number" id="adm-uber-cost" class="form-input" placeholder="Dejar vacío para decir 'Traslado a coordinar según zona' o ej: 4500" />
+          <input type="number" id="adm-uber-cost" class="form-input" placeholder="Dejar vacío o ej: 4500" />
           <small style="color:var(--text-muted); display:block; margin-top:4px;">
-            Si ponés un monto (ej. 4500), el cotizador muestra automáticamente el valor ida y vuelta ($9.000 por visita). Si lo dejás vacío, dice "Traslado según zona a coordinar".
+            Si ponés un monto (ej. 4500), el cotizador muestra el valor ida y vuelta ($9.000 por visita). Si lo dejás vacío, dice "Traslado según zona a coordinar".
           </small>
         </div>
 

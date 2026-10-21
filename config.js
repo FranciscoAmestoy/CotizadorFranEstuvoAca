@@ -112,6 +112,22 @@ window.COTIZADOR_CONFIG = {
       badge: "🔥 Máximo ahorro",
       destacado: false,
     },
+    {
+      meses: 9,
+      descuentoPct: 35,
+      etiqueta: "9 Meses",
+      subtitulo: "35% OFF en el total + Congelás precio",
+      badge: "🚀 9 Meses",
+      destacado: false,
+    },
+    {
+      meses: 12,
+      descuentoPct: 40,
+      etiqueta: "12 Meses",
+      subtitulo: "40% OFF en el total + Congelás precio por 1 año",
+      badge: "👑 1 Año Completo",
+      destacado: false,
+    },
   ],
 
   // --------------------------------------------------------------------------
