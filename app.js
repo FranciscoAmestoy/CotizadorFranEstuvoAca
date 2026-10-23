@@ -569,7 +569,7 @@
           <div style="flex:1;">
             <div class="decision-card-title referral-text-title">🤝 25% OFF en tu pedido con tu código de referido</div>
             <div class="decision-card-desc">
-              Accedé a 25% OFF recomendando o ingresando el código de un colega.
+              Accedé a 25% OFF recomendando o ingresando el código de un amigo.
               <a href="javascript:void(0)" class="referral-terms-link" data-action="open-referral-terms">Ver términos y condiciones</a>
             </div>
           </div>
@@ -1077,7 +1077,7 @@
     if (wantsREF) {
       refHTML = `
         <div class="referral-step-card">
-          <div style="font-size:1.15rem; font-weight:900; color:#92400e;">🤝 Programa de Referidos (25% OFF)</div>
+          <div style="font-size:1.15rem; font-weight:900; color:#92400e;">🤝 Programa de Referidos<br/>(25% OFF)</div>
           <p style="font-size:0.88rem; color:#b45309; line-height:1.4;">
             Descuento válido al cancelar el saldo, bajo condición de seña previa del referido.
             <br/>
@@ -1087,13 +1087,13 @@
           <!-- Input para código preexistente -->
           <div class="referral-input-box">
             <label for="input-referred-code" style="display:block; font-size:0.9rem; font-weight:800; color:#78350f; margin-bottom:6px;">
-              ¿Tenés el código de un colega o amigo que te recomendó?
+              ¿Tenés el código de un amigo que te recomendó?
             </label>
             <input 
               type="text" 
               id="input-referred-code" 
               class="lead-input referral-input" 
-              placeholder="Ingresá el código acá (ej: k7Mp9)" 
+              placeholder="Ingresá el código acá" 
               value="${state.inputReferredCode || ""}" 
               maxlength="10"
             />
@@ -1101,7 +1101,7 @@
 
           <!-- Código autogenerado para compartir -->
           <div class="referral-code-display-box">
-            <div style="font-size:0.82rem; font-weight:800; color:#92400e; text-transform:uppercase;">Tu código de referente para compartir:</div>
+            <div style="font-size:0.82rem; font-weight:800; color:#92400e; text-transform:uppercase;">Tu código de referente:</div>
             <div class="referral-badge-code">${state.myReferralCode}</div>
           </div>
 
@@ -1113,7 +1113,7 @@
               class="referral-want-checkbox" 
               ${state.wantToRefer ? "checked" : ""} 
             />
-            <span style="font-size:1.05rem; font-weight:800; color:#92400e;">¡Lo quiero! Recomendaré a alguien</span>
+            <span style="font-size:1.05rem; font-weight:800; color:#92400e;">¡Lo quiero!<br/>Recomendaré a alguien</span>
           </label>
         </div>
       `;
