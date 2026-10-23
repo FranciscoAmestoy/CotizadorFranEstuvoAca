@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Presupuestador | Fran Estuvo Acá</title>
   <meta name="description" content="Armá tu presupuesto interactivo paso a paso y al instante." />
+  <link rel="icon" type="image/png" href="logo.png" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -26,7 +27,10 @@
       </div>
 
       <div class="nav-right">
-        <div class="header-brand-pill" id="header-brand-badge">Fran Estuvo Acá</div>
+        <div class="header-brand-container">
+          <img src="logo.png" alt="Fran Estuvo Acá" class="header-logo-badge" />
+          <div class="header-brand-pill" id="header-brand-badge">Fran Estuvo Acá</div>
+        </div>
       </div>
     </div>
   </header>
@@ -105,17 +109,22 @@
         </div>
 
         <div class="form-group">
-          <label for="adm-client-name">2. Nombre del Cliente o Negocio (Para el saludo y WhatsApp)</label>
-          <input type="text" id="adm-client-name" class="form-input" placeholder="Ej: Conte-GEN" />
+          <label for="adm-client-name">2. Nombre de la Persona (Para el saludo y WhatsApp)</label>
+          <input type="text" id="adm-client-name" class="form-input" placeholder="Ej: Marcos" />
         </div>
 
         <div class="form-group">
-          <label for="adm-client-note">3. Nota o explicación personalizada arriba de todo (Opcional)</label>
+          <label for="adm-business-name">3. Nombre del Negocio o Emprendimiento (Opcional)</label>
+          <input type="text" id="adm-business-name" class="form-input" placeholder="Ej: Conte-GEN" />
+        </div>
+
+        <div class="form-group">
+          <label for="adm-client-note">4. Nota o explicación personalizada arriba de todo (Opcional)</label>
           <input type="text" id="adm-client-note" class="form-input" placeholder="Ej: Pensado para mostrar los contenedores en stock y generar consultas" />
         </div>
 
         <div class="form-group">
-          <label for="adm-uber-cost">4. Costo de 1 viaje de Uber (Solo ida) hasta el cliente (Opcional)</label>
+          <label for="adm-uber-cost">5. Costo de 1 viaje de Uber (Solo ida) hasta el cliente (Opcional)</label>
           <input type="number" id="adm-uber-cost" class="form-input" placeholder="Dejar vacío o ej: 4500" />
           <small style="color:var(--text-muted); display:block; margin-top:4px;">
             Si ponés un monto (ej. 4500), el cotizador muestra el valor ida y vuelta ($9.000 por visita). Si lo dejás vacío, dice "Traslado según zona a coordinar".

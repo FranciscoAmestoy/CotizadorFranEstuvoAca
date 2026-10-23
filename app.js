@@ -13,11 +13,12 @@
     enabledModules: { v: false, cm: false, to: false, inu: false },
     hasExplicitParams: false,
     clientName: "",
+    businessName: "",
     customNote: "",
     uberOneWay: 0,
 
     // Decisiones del cliente
-    selectedServices: { v: false, cm: false, to: false }, // Usado si entra sin parámetros
+    selectedServices: { v: false, cm: false, to: false, inu: false }, // Usado si entra sin parámetros
     videoMode: null, // 'graboEdiPubli' | 'ediPubli'
     videoQty: 4, // 1 a 30 videos por mes
     videoMonths: 3, // 1, 2, 3, 6 meses
@@ -178,22 +179,30 @@
     const hasTO = keysLower.includes("to");
     const hasINU = keysLower.includes("inu");
 
-    if (hasV || hasCM || hasTO) {
+    if (hasV || hasCM || hasTO || hasINU) {
       state.hasExplicitParams = true;
       state.enabledModules.v = hasV;
       state.enabledModules.cm = hasCM;
       state.enabledModules.to = hasTO;
+      state.enabledModules.inu = hasINU;
     } else {
       state.hasExplicitParams = false;
       state.enabledModules.v = false;
       state.enabledModules.cm = false;
       state.enabledModules.to = false;
+      state.enabledModules.inu = false;
     }
-
-    state.enabledModules.inu = hasINU;
 
     const clientParam = params.get("c") || params.get("cliente") || "";
     state.clientName = clientParam.trim();
+
+    const bizParam =
+      params.get("b") ||
+      params.get("biz") ||
+      params.get("negocio") ||
+      params.get("emprendimiento") ||
+      "";
+    state.businessName = bizParam.trim();
 
     const noteParam = params.get("nota") || "";
     state.customNote = noteParam.trim();
@@ -215,8 +224,10 @@
   function getStepsQueue() {
     const queue = [];
 
-    // Si no vinieron parámetros en la URL, el paso 1 es elegir qué servicios quiere cotizar
+    // Si no vinieron parámetros en la URL:
+    // El paso 1 pregunta nombre y emprendimiento, y el paso 2 qué servicios quiere cotizar
     if (!state.hasExplicitParams) {
+      queue.push({ id: "client_info", title: "Tus datos" });
       queue.push({ id: "select_services", title: "Servicios a cotizar" });
     }
 
@@ -229,6 +240,9 @@
     const wantsTO = state.hasExplicitParams
       ? state.enabledModules.to
       : state.selectedServices.to;
+    const wantsINU = state.hasExplicitParams
+      ? state.enabledModules.inu
+      : state.selectedServices.inu;
 
     // Pasos de Videos
     if (wantsV) {
@@ -250,8 +264,8 @@
       queue.push({ id: "to_choice", title: "Catálogo / Tienda" });
     }
 
-    // Paso de Inucorn (si está en la URL)
-    if (state.enabledModules.inu) {
+    // Paso de Inucorn (si está en la URL o si lo seleccionó en servicios iniciales)
+    if (wantsINU) {
       queue.push({ id: "inu_banner", title: "Beneficio Imprenta" });
     }
 
@@ -318,8 +332,12 @@
     btnBack.style.visibility = state.currentStepIndex > 0 ? "visible" : "hidden";
 
     // Nombre de marca o cliente
-    if (state.clientName) {
+    if (state.clientName && state.businessName) {
+      brandBadge.textContent = `${state.clientName} (${state.businessName})`;
+    } else if (state.clientName) {
       brandBadge.textContent = state.clientName;
+    } else if (state.businessName) {
+      brandBadge.textContent = state.businessName;
     } else {
       brandBadge.textContent = "Fran Estuvo Acá";
     }
@@ -340,10 +358,10 @@
     const savingsEl = document.getElementById("bottom-savings");
     const labelEl = document.getElementById("bottom-label");
 
-    // Si está en el selector inicial de servicios, no calculamos montos todavía
-    if (currentStep.id === "select_services") {
+    // Si está en el formulario de datos o selector inicial de servicios, no calculamos montos todavía
+    if (currentStep.id === "client_info" || currentStep.id === "select_services") {
       labelEl.textContent = "Presupuesto en armado";
-      amountEl.textContent = "Marcá tus opciones";
+      amountEl.textContent = currentStep.id === "client_info" ? "Tus datos" : "Marcá tus opciones";
       savingsEl.style.display = "none";
       return;
     }
@@ -374,6 +392,9 @@
 
     let html = "";
     switch (step.id) {
+      case "client_info":
+        html = renderStep_ClientInfo();
+        break;
       case "select_services":
         html = renderStep_SelectServices();
         break;
@@ -410,15 +431,76 @@
   // 5. VISTAS DE CADA PASO ("ONE-PAGES" CONCENTRADAS)
   // ==========================================================================
 
-  // Paso 0: Solo si entra a la URL limpia sin parámetros
+  // Paso 0: Formulario de datos iniciales (Solo si entra a la URL limpia sin parámetros)
+  function renderStep_ClientInfo() {
+    return `
+      <div class="step-header">
+        <div class="step-sticker-badge">¡Te damos la bienvenida!</div>
+        <h1 class="step-question-title">¿Cómo te llamás y cuál es tu proyecto?</h1>
+        <p class="step-question-subtitle">
+          Completá tus datos para personalizar cada etapa de tu propuesta y preparar el mensaje listo para WhatsApp.
+        </p>
+      </div>
+
+      <div class="client-info-card">
+        <div class="lead-form-group">
+          <label for="lead-client-name" class="lead-label">
+            👤 Tu nombre o apodo <span class="label-req">*</span>
+          </label>
+          <input 
+            type="text" 
+            id="lead-client-name" 
+            class="lead-input" 
+            placeholder="Ej: Marcos / Laura" 
+            value="${state.clientName || ""}" 
+            autocomplete="name"
+          />
+        </div>
+
+        <div class="lead-form-group">
+          <label for="lead-business-name" class="lead-label">
+            🏪 Nombre de tu negocio o emprendimiento
+          </label>
+          <input 
+            type="text" 
+            id="lead-business-name" 
+            class="lead-input" 
+            placeholder="Ej: Panadería Central / Taller Mecánico" 
+            value="${state.businessName || ""}" 
+            autocomplete="organization"
+          />
+        </div>
+
+        <div class="lead-tip-box">
+          💡 <strong>Tip:</strong> Si todavía estás en etapa de idea o no tenés nombre definitivo, podés dejarlo en blanco o poner tu rubro.
+        </div>
+
+        <button type="button" class="btn-primary" style="width:100%; justify-content:center; padding:16px; font-size:1.15rem; margin-top:10px;" data-action="submit-client-info">
+          Elegir servicios a cotizar ➔
+        </button>
+      </div>
+    `;
+  }
+
+  // Paso 1: Selector de servicios (Solo si entra a la URL limpia sin parámetros)
   function renderStep_SelectServices() {
     const isV = state.selectedServices.v;
     const isCM = state.selectedServices.cm;
     const isTO = state.selectedServices.to;
+    const isInu = state.selectedServices.inu;
+
+    let greetingText = "";
+    if (state.clientName && state.businessName) {
+      greetingText = `¡Hola ${state.clientName} (${state.businessName})! 👋`;
+    } else if (state.clientName) {
+      greetingText = `¡Hola ${state.clientName}! 👋`;
+    } else if (state.businessName) {
+      greetingText = `¡Hola gente de ${state.businessName}! 👋`;
+    }
 
     return `
       <div class="step-header">
-        ${state.clientName ? `<div class="step-greeting-pill">¡Hola ${state.clientName}! 👋</div>` : ""}
+        ${greetingText ? `<div class="step-greeting-pill">${greetingText}</div>` : ""}
         <h1 class="step-question-title">¿Qué servicios te gustaría cotizar?</h1>
         <p class="step-question-subtitle">Marcá las opciones que te interesen para tu negocio y avanzaremos paso a paso para armar tu propuesta a medida.</p>
         ${state.customNote ? `<div class="step-custom-note">💬 Nota de Fran: "${state.customNote}"</div>` : ""}
@@ -446,6 +528,14 @@
           <div>
             <div class="decision-card-title">🛒 Catálogo Digital / Tienda Online</div>
             <div class="decision-card-desc">Armado en WhatsApp Business o Tienda Nube / Empretienda (Pago por única vez).</div>
+          </div>
+        </div>
+
+        <div class="module-select-card inucorn-select-card ${isInu ? "selected" : ""}" data-action="toggle-service-pick" data-service="inu">
+          <div class="module-checkbox-icon inucorn-chk-icon">${isInu ? "✓" : ""}</div>
+          <div>
+            <div class="decision-card-title inucorn-text-title">🎁 Descuento especial en imprenta y papelería (Inucorn)</div>
+            <div class="decision-card-desc">10% OFF en folletería, tarjetas, stickers y cartelería para tu local o packaging con el código de Fran.</div>
           </div>
         </div>
       </div>
@@ -564,70 +654,94 @@
     `;
   }
 
-  // Paso V3: Meses de Videos (Congelar precio)
+  // Paso V3: Meses de Videos (Congelar precio o mensual)
   function renderStep_VMonths() {
-    const primaryMonths = [1, 3, 6];
-    const extraMonths = [9, 12];
-
-    const primaryCardsHTML = primaryMonths
-      .map((mVal) => {
-        const m = CFG.mesesOpciones.find((opt) => opt.meses === mVal) || {
-          etiqueta: `${mVal} Meses`,
-          descuentoPct: 0,
-        };
-        const quote = calculateVideosQuote(
-          state.videoMode,
-          state.videoQty,
-          mVal
-        );
-        const isSel = state.videoMonths === mVal;
-
+    const primaryCardsHTML = [
+      // 1 Mes / Mensual
+      (() => {
+        const quote = calculateVideosQuote(state.videoMode, state.videoQty, 1);
+        const isSel = state.videoMonths === 1;
         return `
-          <div class="qty-pill-card ${isSel ? "selected" : ""}" data-action="choose-v-months" data-months="${mVal}">
-            <div class="qty-pill-number">${m.etiqueta}</div>
-            <div class="qty-pill-price">${formatARS(quote.totalFinal)}</div>
-            <div class="qty-pill-sub">(${formatARS(quote.effectivePerMonth)}/mes)</div>
-            <span class="qty-pill-discount">
-              ${m.descuentoPct > 0 ? `-${m.descuentoPct}% OFF TOTAL` : "Precio base"}
-            </span>
-            ${quote.totalSaved > 0 ? `<div class="qty-pill-savings">Ahorrás ${formatARS(quote.totalSaved)}</div>` : ""}
+          <div class="month-pill-card ${isSel ? "selected" : ""}" data-action="choose-v-months" data-months="1">
+            <div class="month-pill-header">
+              <span class="month-pill-title">Mensual</span>
+              <span class="month-pill-badge badge-neutral">Sin permanencia</span>
+            </div>
+            <div class="month-pill-hero-price">${formatARS(quote.effectivePerMonth)} <small>/ mes</small></div>
+            <div class="month-pill-subdetail">Abonás por mes</div>
           </div>
         `;
-      })
-      .join("");
-
-    const extraCardsHTML = extraMonths
-      .map((mVal) => {
-        const m = CFG.mesesOpciones.find((opt) => opt.meses === mVal) || {
-          etiqueta: `${mVal} Meses`,
-          descuentoPct: 35,
-        };
-        const quote = calculateVideosQuote(
-          state.videoMode,
-          state.videoQty,
-          mVal
-        );
-        const isSel = state.videoMonths === mVal;
-
+      })(),
+      // 3 Meses
+      (() => {
+        const quote = calculateVideosQuote(state.videoMode, state.videoQty, 3);
+        const isSel = state.videoMonths === 3;
         return `
-          <div class="qty-pill-card ${isSel ? "selected" : ""}" data-action="choose-v-months" data-months="${mVal}">
-            <div class="qty-pill-number">${m.etiqueta}</div>
-            <div class="qty-pill-price">${formatARS(quote.totalFinal)}</div>
-            <div class="qty-pill-sub">(${formatARS(quote.effectivePerMonth)}/mes)</div>
-            <span class="qty-pill-discount" style="background:var(--warning-bg); color:#92400e;">
-              -${m.descuentoPct}% OFF TOTAL
-            </span>
-            ${quote.totalSaved > 0 ? `<div class="qty-pill-savings">Ahorrás ${formatARS(quote.totalSaved)}</div>` : ""}
+          <div class="month-pill-card ${isSel ? "selected" : ""}" data-action="choose-v-months" data-months="3">
+            <div class="month-pill-header">
+              <span class="month-pill-title">3 Meses</span>
+              <span class="month-pill-badge">⭐ -20% OFF</span>
+            </div>
+            <div class="month-pill-hero-price">${formatARS(quote.effectivePerMonth)} <small>/ mes</small></div>
+            <div class="month-pill-subdetail">Total: ${formatARS(quote.totalFinal)}<br/>(Ahorro ${formatARS(quote.totalSaved)})</div>
           </div>
         `;
-      })
-      .join("");
+      })(),
+      // 6 Meses
+      (() => {
+        const quote = calculateVideosQuote(state.videoMode, state.videoQty, 6);
+        const isSel = state.videoMonths === 6;
+        return `
+          <div class="month-pill-card ${isSel ? "selected" : ""}" data-action="choose-v-months" data-months="6">
+            <div class="month-pill-header">
+              <span class="month-pill-title">6 Meses</span>
+              <span class="month-pill-badge">🔥 -30% OFF</span>
+            </div>
+            <div class="month-pill-hero-price">${formatARS(quote.effectivePerMonth)} <small>/ mes</small></div>
+            <div class="month-pill-subdetail">Total: ${formatARS(quote.totalFinal)}<br/>(Ahorro ${formatARS(quote.totalSaved)})</div>
+          </div>
+        `;
+      })(),
+    ].join("");
+
+    const extraCardsHTML = [
+      // 9 Meses
+      (() => {
+        const quote = calculateVideosQuote(state.videoMode, state.videoQty, 9);
+        const isSel = state.videoMonths === 9;
+        return `
+          <div class="month-pill-card ${isSel ? "selected" : ""}" data-action="choose-v-months" data-months="9">
+            <div class="month-pill-header">
+              <span class="month-pill-title">9 Meses</span>
+              <span class="month-pill-badge" style="background:#fef3c7; color:#92400e;">🚀 -35% OFF</span>
+            </div>
+            <div class="month-pill-hero-price">${formatARS(quote.effectivePerMonth)} <small>/ mes</small></div>
+            <div class="month-pill-subdetail">Total: ${formatARS(quote.totalFinal)}<br/>(Ahorro ${formatARS(quote.totalSaved)})</div>
+          </div>
+        `;
+      })(),
+      // 12 Meses
+      (() => {
+        const quote = calculateVideosQuote(state.videoMode, state.videoQty, 12);
+        const isSel = state.videoMonths === 12;
+        return `
+          <div class="month-pill-card ${isSel ? "selected" : ""}" data-action="choose-v-months" data-months="12">
+            <div class="month-pill-header">
+              <span class="month-pill-title">12 Meses (1 Año)</span>
+              <span class="month-pill-badge" style="background:#fef3c7; color:#92400e;">👑 -40% OFF</span>
+            </div>
+            <div class="month-pill-hero-price">${formatARS(quote.effectivePerMonth)} <small>/ mes</small></div>
+            <div class="month-pill-subdetail">Total: ${formatARS(quote.totalFinal)}<br/>(Ahorro ${formatARS(quote.totalSaved)})</div>
+          </div>
+        `;
+      })(),
+    ].join("");
 
     return `
       <div class="step-header">
-        <h1 class="step-question-title">¿Por cuántos meses querés congelar el precio de los videos?</h1>
+        <h1 class="step-question-title">¿Querés congelar precio o abonar por mes?</h1>
         <p class="step-question-subtitle">
-          💡 <strong>Beneficio por pago adelantado:</strong> Precontratando por meses congelás este valor hoy contra aumentos por inflación y sumás hasta un 40% de descuento extra en el total.
+          Podés abonar por mes sin compromiso, o congelar el precio por adelantado para asegurar tu valor sin aumentos por inflación y con descuento.
         </p>
       </div>
 
@@ -639,7 +753,7 @@
         <div class="extra-months-header">
           <div>
             <div style="font-weight:900; font-size:1.05rem;">¿Querés congelar por más de 6 meses?</div>
-            <div style="font-size:0.85rem; color:var(--text-muted);">Planes a largo plazo con el mayor porcentaje de descuento</div>
+            <div style="font-size:0.85rem; color:var(--text-muted);">Planes semestrales o anuales con el mayor porcentaje de descuento</div>
           </div>
         </div>
         <div class="extra-months-grid">
@@ -674,7 +788,7 @@
             </ul>
 
             <details class="mini-accordion" onclick="event.stopPropagation()">
-              <summary>Ver los ${plan.detalleCompleto.length} puntos incluidos en este plan</summary>
+              <summary>Ver qué incluye este plan ▾</summary>
               <ul>
                 ${plan.detalleCompleto.map((d) => `<li>${d}</li>`).join("")}
               </ul>
@@ -682,7 +796,7 @@
 
             <div class="decision-card-footer">
               <span class="decision-card-price">${formatARS(plan.precioMensual)} <small style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">/ mes base</small></span>
-              <span style="font-size:0.85rem; font-weight:800; color:var(--success);">Hasta 30% OFF por meses</span>
+              <span style="font-size:0.85rem; font-weight:800; color:var(--success);">Hasta 40% OFF congelando</span>
             </div>
           </div>
         `;
@@ -719,60 +833,92 @@
     const plan = CFG.cm.planes.find((p) => p.id === state.cmPlanId);
     if (!plan) return "";
 
-    const primaryMonths = [1, 3, 6];
-    const extraMonths = [9, 12];
-
-    const primaryCardsHTML = primaryMonths
-      .map((mVal) => {
-        const m = CFG.mesesOpciones.find((opt) => opt.meses === mVal) || {
-          etiqueta: `${mVal} Meses`,
-          descuentoPct: 0,
-        };
-        const quote = calculateCMQuote(state.cmPlanId, mVal);
-        const isSel = state.cmMonths === mVal;
-
+    const primaryCardsHTML = [
+      // 1 Mes / Mensual
+      (() => {
+        const quote = calculateCMQuote(state.cmPlanId, 1);
+        const isSel = state.cmMonths === 1;
         return `
-          <div class="qty-pill-card ${isSel ? "selected" : ""}" data-action="choose-cm-months" data-months="${mVal}">
-            <div class="qty-pill-number">${m.etiqueta}</div>
-            <div class="qty-pill-price">${formatARS(quote.totalFinal)}</div>
-            <div class="qty-pill-sub">(${formatARS(quote.effectivePerMonth)}/mes)</div>
-            <span class="qty-pill-discount">
-              ${m.descuentoPct > 0 ? `-${m.descuentoPct}% OFF TOTAL` : "Precio mes a mes"}
-            </span>
-            ${quote.totalSaved > 0 ? `<div class="qty-pill-savings">Ahorrás ${formatARS(quote.totalSaved)}</div>` : ""}
+          <div class="month-pill-card ${isSel ? "selected" : ""}" data-action="choose-cm-months" data-months="1">
+            <div class="month-pill-header">
+              <span class="month-pill-title">Mensual</span>
+              <span class="month-pill-badge badge-neutral">Sin permanencia</span>
+            </div>
+            <div class="month-pill-hero-price">${formatARS(quote.effectivePerMonth)} <small>/ mes</small></div>
+            <div class="month-pill-subdetail">Abonás por mes</div>
           </div>
         `;
-      })
-      .join("");
-
-    const extraCardsHTML = extraMonths
-      .map((mVal) => {
-        const m = CFG.mesesOpciones.find((opt) => opt.meses === mVal) || {
-          etiqueta: `${mVal} Meses`,
-          descuentoPct: 35,
-        };
-        const quote = calculateCMQuote(state.cmPlanId, mVal);
-        const isSel = state.cmMonths === mVal;
-
+      })(),
+      // 3 Meses
+      (() => {
+        const quote = calculateCMQuote(state.cmPlanId, 3);
+        const isSel = state.cmMonths === 3;
         return `
-          <div class="qty-pill-card ${isSel ? "selected" : ""}" data-action="choose-cm-months" data-months="${mVal}">
-            <div class="qty-pill-number">${m.etiqueta}</div>
-            <div class="qty-pill-price">${formatARS(quote.totalFinal)}</div>
-            <div class="qty-pill-sub">(${formatARS(quote.effectivePerMonth)}/mes)</div>
-            <span class="qty-pill-discount" style="background:var(--warning-bg); color:#92400e;">
-              -${m.descuentoPct}% OFF TOTAL
-            </span>
-            ${quote.totalSaved > 0 ? `<div class="qty-pill-savings">Ahorrás ${formatARS(quote.totalSaved)}</div>` : ""}
+          <div class="month-pill-card ${isSel ? "selected" : ""}" data-action="choose-cm-months" data-months="3">
+            <div class="month-pill-header">
+              <span class="month-pill-title">3 Meses</span>
+              <span class="month-pill-badge">⭐ -20% OFF</span>
+            </div>
+            <div class="month-pill-hero-price">${formatARS(quote.effectivePerMonth)} <small>/ mes</small></div>
+            <div class="month-pill-subdetail">Total: ${formatARS(quote.totalFinal)}<br/>(Ahorro ${formatARS(quote.totalSaved)})</div>
           </div>
         `;
-      })
-      .join("");
+      })(),
+      // 6 Meses
+      (() => {
+        const quote = calculateCMQuote(state.cmPlanId, 6);
+        const isSel = state.cmMonths === 6;
+        return `
+          <div class="month-pill-card ${isSel ? "selected" : ""}" data-action="choose-cm-months" data-months="6">
+            <div class="month-pill-header">
+              <span class="month-pill-title">6 Meses</span>
+              <span class="month-pill-badge">🔥 -30% OFF</span>
+            </div>
+            <div class="month-pill-hero-price">${formatARS(quote.effectivePerMonth)} <small>/ mes</small></div>
+            <div class="month-pill-subdetail">Total: ${formatARS(quote.totalFinal)}<br/>(Ahorro ${formatARS(quote.totalSaved)})</div>
+          </div>
+        `;
+      })(),
+    ].join("");
+
+    const extraCardsHTML = [
+      // 9 Meses
+      (() => {
+        const quote = calculateCMQuote(state.cmPlanId, 9);
+        const isSel = state.cmMonths === 9;
+        return `
+          <div class="month-pill-card ${isSel ? "selected" : ""}" data-action="choose-cm-months" data-months="9">
+            <div class="month-pill-header">
+              <span class="month-pill-title">9 Meses</span>
+              <span class="month-pill-badge" style="background:#fef3c7; color:#92400e;">🚀 -35% OFF</span>
+            </div>
+            <div class="month-pill-hero-price">${formatARS(quote.effectivePerMonth)} <small>/ mes</small></div>
+            <div class="month-pill-subdetail">Total: ${formatARS(quote.totalFinal)}<br/>(Ahorro ${formatARS(quote.totalSaved)})</div>
+          </div>
+        `;
+      })(),
+      // 12 Meses
+      (() => {
+        const quote = calculateCMQuote(state.cmPlanId, 12);
+        const isSel = state.cmMonths === 12;
+        return `
+          <div class="month-pill-card ${isSel ? "selected" : ""}" data-action="choose-cm-months" data-months="12">
+            <div class="month-pill-header">
+              <span class="month-pill-title">12 Meses (1 Año)</span>
+              <span class="month-pill-badge" style="background:#fef3c7; color:#92400e;">👑 -40% OFF</span>
+            </div>
+            <div class="month-pill-hero-price">${formatARS(quote.effectivePerMonth)} <small>/ mes</small></div>
+            <div class="month-pill-subdetail">Total: ${formatARS(quote.totalFinal)}<br/>(Ahorro ${formatARS(quote.totalSaved)})</div>
+          </div>
+        `;
+      })(),
+    ].join("");
 
     return `
       <div class="step-header">
-        <h1 class="step-question-title">¿Por cuántos meses querés congelar el valor de ${plan.nombre}?</h1>
+        <h1 class="step-question-title">¿Querés congelar el valor de ${plan.nombre} o abonar por mes?</h1>
         <p class="step-question-subtitle">
-          Abonando por adelantado congelás el costo mensual sin aumentos por inflación y ahorrás hasta 40% en el total.
+          Podés abonar por mes sin compromiso, o congelar el costo mensual por adelantado sin aumentos por inflación.
         </p>
       </div>
 
@@ -790,6 +936,12 @@
         <div class="extra-months-grid">
           ${extraCardsHTML}
         </div>
+      </div>
+
+      <div style="text-align:center; margin-top:18px;">
+        <button type="button" class="btn-skip-freeze" data-action="skip-cm-freeze">
+          ⚪ No congelar precio, avanzar mensual ➔
+        </button>
       </div>
     `;
   }
@@ -857,8 +1009,8 @@
   // Paso INU: Cupón Inucorn
   function renderStep_InuBanner() {
     const inu = CFG.inucorn;
-    const clientLabel = state.clientName ? state.clientName : "un cliente";
-    const msg = `Hola! Soy ${clientLabel} y escribo porque me gustaría solicitar un presupuesto`;
+    const clientLabel = state.clientName || (state.businessName || "un cliente");
+    const msg = `Hola! Soy ${clientLabel} y escribo de parte de Fran Estuvo Acá porque me gustaría solicitar un presupuesto!`;
     const inuWspUrl = `https://wa.me/${inu.whatsappNumber}?text=${encodeURIComponent(msg)}`;
 
     return `
@@ -948,6 +1100,24 @@
       `);
     }
 
+    // Item Inucorn (si lo seleccionó)
+    const wantsINU = state.hasExplicitParams
+      ? state.enabledModules.inu
+      : state.selectedServices.inu;
+    if (wantsINU) {
+      items.push(`
+        <div class="final-summary-item" style="border-left: 3px solid var(--inucorn-purple); padding-left: 10px;">
+          <div>
+            <div class="final-item-title inucorn-text-title">🎁 Beneficio Imprenta Inucorn (10% OFF)</div>
+            <div class="final-item-desc">Código exclusivo reservado: <strong>${CFG.inucorn.codigoCupon}</strong></div>
+          </div>
+          <div class="final-item-price" style="color:var(--inucorn-purple); font-size:1rem;">
+            Activado
+          </div>
+        </div>
+      `);
+    }
+
     // Aclaración de Traslado
     let travelBoxHTML = "";
     if (requiresTravel) {
@@ -968,9 +1138,18 @@
 
     const wspUrl = buildFranWhatsAppUrl();
 
+    let clientGreeting = "¡Presupuesto Completado! 🎉";
+    if (state.clientName && state.businessName) {
+      clientGreeting = `¡Propuesta para ${state.clientName} (${state.businessName})! 🎉`;
+    } else if (state.clientName) {
+      clientGreeting = `¡Propuesta para ${state.clientName}! 🎉`;
+    } else if (state.businessName) {
+      clientGreeting = `¡Propuesta para ${state.businessName}! 🎉`;
+    }
+
     return `
       <div class="step-header" style="text-align:center;">
-        <div class="step-greeting-pill">¡Presupuesto Completado! 🎉</div>
+        <div class="step-greeting-pill">${clientGreeting}</div>
         <h1 class="step-question-title">Tu propuesta a medida está lista</h1>
         <p class="step-question-subtitle">Revisá el resumen y tocale el botón verde para coordinar directamente con Fran por WhatsApp.</p>
       </div>
@@ -1010,8 +1189,12 @@
     const totals = calculateRunningTotals();
     const lines = [];
 
-    if (state.clientName) {
-      lines.push(`¡Hola Fran! Soy de *${state.clientName}*.`);
+    if (state.clientName && state.businessName) {
+      lines.push(`¡Hola Fran! Soy *${state.clientName}* de *${state.businessName}*.`);
+    } else if (state.clientName) {
+      lines.push(`¡Hola Fran! Soy *${state.clientName}*.`);
+    } else if (state.businessName) {
+      lines.push(`¡Hola Fran! Te escribo de parte de *${state.businessName}*.`);
     } else {
       lines.push(`¡Hola Fran!`);
     }
@@ -1055,6 +1238,13 @@
       lines.push(`*${tq.label}:* Pago único -> *${formatARS(tq.totalFinal)}*`);
     }
 
+    const wantsINU = state.hasExplicitParams
+      ? state.enabledModules.inu
+      : state.selectedServices.inu;
+    if (wantsINU) {
+      lines.push(`*Beneficio Imprenta Inucorn:* 10% OFF activado (Código: ${CFG.inucorn.codigoCupon})`);
+    }
+
     lines.push(``);
     lines.push(`*TOTAL COTIZADO:* *${formatARS(totals.totalFinal)}*`);
     if (totals.totalSaved > 0) {
@@ -1089,6 +1279,24 @@
       const action = target.getAttribute("data-action");
 
       switch (action) {
+        case "submit-client-info": {
+          const nameInput = document.getElementById("lead-client-name");
+          const bizInput = document.getElementById("lead-business-name");
+          const nameVal = nameInput ? nameInput.value.trim() : "";
+          const bizVal = bizInput ? bizInput.value.trim() : "";
+
+          if (!nameVal && !bizVal) {
+            alert("¡Contanos al menos tu nombre para saber cómo llamarte!");
+            if (nameInput) nameInput.focus();
+            return;
+          }
+
+          state.clientName = nameVal;
+          state.businessName = bizVal;
+          advanceStep();
+          break;
+        }
+
         case "prev-step": {
           prevStep();
           break;
@@ -1117,7 +1325,8 @@
           if (
             !state.selectedServices.v &&
             !state.selectedServices.cm &&
-            !state.selectedServices.to
+            !state.selectedServices.to &&
+            !state.selectedServices.inu
           ) {
             alert("Elegí al menos un servicio para comenzar.");
             return;
@@ -1157,6 +1366,12 @@
           break;
         }
 
+        case "skip-v-freeze": {
+          state.videoMonths = 1;
+          setTimeout(() => advanceStep(), 100);
+          break;
+        }
+
         case "confirm-v-months": {
           advanceStep();
           break;
@@ -1171,6 +1386,12 @@
         case "choose-cm-months": {
           state.cmMonths = parseInt(target.getAttribute("data-months"), 10);
           setTimeout(() => advanceStep(), 120);
+          break;
+        }
+
+        case "skip-cm-freeze": {
+          state.cmMonths = 1;
+          setTimeout(() => advanceStep(), 100);
           break;
         }
 
@@ -1218,6 +1439,21 @@
       }
     });
 
+    // Enter key para enviar inputs del paso inicial
+    document.body.addEventListener("keydown", (e) => {
+      if (
+        e.key === "Enter" &&
+        (e.target.id === "lead-client-name" ||
+          e.target.id === "lead-business-name")
+      ) {
+        e.preventDefault();
+        const submitBtn = document.querySelector(
+          '[data-action="submit-client-info"]'
+        );
+        if (submitBtn) submitBtn.click();
+      }
+    });
+
     // Inputs de Mantenimiento / Admin
     const adminInputs = [
       "adm-chk-v",
@@ -1225,6 +1461,7 @@
       "adm-chk-to",
       "adm-chk-inu",
       "adm-client-name",
+      "adm-business-name",
       "adm-client-note",
       "adm-uber-cost",
     ];
@@ -1294,6 +1531,8 @@
     const chkTO = document.getElementById("adm-chk-to").checked;
     const chkINU = document.getElementById("adm-chk-inu").checked;
     const client = document.getElementById("adm-client-name").value.trim();
+    const bizEl = document.getElementById("adm-business-name");
+    const biz = bizEl ? bizEl.value.trim() : "";
     const note = document.getElementById("adm-client-note").value.trim();
     const uber = parseInt(
       document.getElementById("adm-uber-cost").value.trim() || "0",
@@ -1306,7 +1545,9 @@
     if (chkTO) parts.push("to");
     if (chkINU) parts.push("inu");
     if (client) parts.push(`c=${encodeURIComponent(client)}`);
+    if (biz) parts.push(`b=${encodeURIComponent(biz)}`);
     if (note) parts.push(`nota=${encodeURIComponent(note)}`);
+    if (uber > 0) parts.push(`uber=${uber}`);
     if (uber > 0) parts.push(`uber=${uber}`);
 
     const finalUrl =

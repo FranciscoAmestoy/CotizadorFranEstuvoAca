@@ -4,17 +4,26 @@
    ========================================================================== */
 
 :root {
-  --bg-page: #f8fafc;
+  --bg-page: #fafaf9;
   --bg-card: #ffffff;
-  --bg-card-hover: #f1f5f9;
-  --text-main: #0f172a;
-  --text-secondary: #334155;
-  --text-muted: #64748b;
+  --bg-card-hover: #fcfcfb;
+  --text-main: #18181b;
+  --text-secondary: #27272a;
+  --text-muted: #71717a;
   
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --primary-light: #eff6ff;
-  --primary-border: #bfdbfe;
+  /* Paleta Inspirada en el Logo y Flyers de Fran Estuvo Acá */
+  --primary: #0891b2;
+  --primary-hover: #0e7490;
+  --primary-light: #ecfeff;
+  --primary-border: #67e8f9;
+
+  --brand-yellow: #f59e0b;
+  --brand-yellow-light: #fef9c3;
+  --brand-yellow-border: #facc15;
+  
+  --brand-pink: #ec4899;
+  --brand-pink-light: #fdf2f8;
+  --brand-pink-border: #f472b6;
   
   --success: #10b981;
   --success-hover: #059669;
@@ -29,19 +38,19 @@
   --warning-border: #fde68a;
   
   --inucorn-purple: #7c3aed;
-  --inucorn-bg: #f5f3ff;
+  --inucorn-bg: #faf5ff;
   --inucorn-border: #ddd6fe;
 
-  --border: #e2e8f0;
-  --border-strong: #cbd5e1;
+  --border: #e4e4e7;
+  --border-strong: #a1a1aa;
   --radius-xl: 20px;
   --radius-lg: 16px;
   --radius-md: 12px;
   --radius-sm: 8px;
   
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 14px rgba(15, 23, 42, 0.06);
-  --shadow-lg: 0 10px 28px rgba(15, 23, 42, 0.1);
+  --shadow-md: 0 4px 14px rgba(24, 24, 27, 0.06);
+  --shadow-lg: 0 10px 28px rgba(24, 24, 27, 0.1);
 }
 
 *, *::before, *::after {
@@ -143,7 +152,7 @@ body {
 
 .progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary) 0%, #3b82f6 100%);
+  background: linear-gradient(90deg, var(--primary) 0%, #22d3ee 100%);
   border-radius: 999px;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -154,14 +163,31 @@ body {
   justify-content: flex-end;
 }
 
+.header-brand-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-logo-badge {
+  height: 36px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.12));
+}
+
 .header-brand-pill {
   font-size: 0.76rem;
   font-weight: 800;
-  background: var(--primary-light);
-  color: var(--primary-hover);
-  padding: 5px 10px;
+  background: var(--brand-yellow-light);
+  color: #854d0e;
+  border: 1px solid var(--brand-yellow-border);
+  padding: 4px 10px;
   border-radius: 999px;
   white-space: nowrap;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ==========================================================================
@@ -208,9 +234,24 @@ body {
   font-weight: 800;
   color: var(--primary);
   background: var(--primary-light);
+  border: 1px solid var(--primary-border);
   padding: 4px 10px;
   border-radius: 999px;
   margin-bottom: 10px;
+}
+
+.step-sticker-badge {
+  display: inline-block;
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: #cffafe;
+  color: #0e7490;
+  border: 1.5px solid #67e8f9;
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-bottom: 8px;
 }
 
 .step-question-title {
@@ -236,6 +277,66 @@ body {
   font-size: 0.95rem;
   font-weight: 600;
   color: #065f46;
+}
+
+/* ==========================================================================
+   PASO 0: FORMULARIO DE DATOS INICIALES (LEAD INFO)
+   ========================================================================== */
+.client-info-card {
+  background: #ffffff;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 22px 20px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.lead-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.lead-label {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.label-req {
+  color: #ef4444;
+  font-weight: 900;
+}
+
+.lead-input {
+  width: 100%;
+  padding: 13px 14px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: var(--text-main);
+  background: #ffffff;
+  transition: all 0.15s ease;
+}
+
+.lead-input:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.18);
+}
+
+.lead-tip-box {
+  background: #fefce8;
+  border: 1px solid #fef08a;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  color: #854d0e;
+  line-height: 1.4;
 }
 
 /* ==========================================================================
@@ -278,7 +379,7 @@ body {
 .decision-card.selected {
   border-color: var(--primary);
   background: var(--primary-light);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+  box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.2);
 }
 
 .decision-card-header {
@@ -302,24 +403,33 @@ body {
   font-weight: 800;
   padding: 3px 9px;
   border-radius: 999px;
-  background: #e2e8f0;
+  background: #f4f4f5;
   color: var(--text-secondary);
   white-space: nowrap;
 }
 
 .card-badge.badge-primary {
-  background: var(--primary-light);
-  color: var(--primary-hover);
+  background: #cffafe;
+  color: #0e7490;
+  border: 1px solid #67e8f9;
 }
 
 .card-badge.badge-success {
   background: var(--success-light);
   color: var(--success-hover);
+  border: 1px solid var(--success-border);
 }
 
 .card-badge.badge-warning {
-  background: var(--warning-bg);
-  color: #92400e;
+  background: var(--brand-yellow-light);
+  color: #854d0e;
+  border: 1px solid var(--brand-yellow-border);
+}
+
+.card-badge.badge-pink {
+  background: var(--brand-pink-light);
+  color: #9d174d;
+  border: 1px solid var(--brand-pink-border);
 }
 
 .decision-card-desc {
@@ -417,20 +527,106 @@ body {
 .qty-pill-card.selected {
   border-color: var(--primary);
   background: var(--primary-light);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+  box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.2);
 }
 
-.qty-pill-sub {
+/* Tarjetas para selección de Meses con jerarquía visual clara */
+.month-pill-card {
+  border: 2px solid var(--border);
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 16px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.month-pill-card:hover {
+  border-color: var(--primary-border);
+  background: #fcfdfe;
+  transform: translateY(-1px);
+}
+
+.month-pill-card.selected {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.2);
+}
+
+.month-pill-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.month-pill-title {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--text-main);
+}
+
+.month-pill-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--success-light);
+  color: var(--success-hover);
+  white-space: nowrap;
+}
+
+.month-pill-badge.badge-neutral {
+  background: #f1f5f9;
+  color: var(--text-secondary);
+}
+
+.month-pill-hero-price {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--primary);
+  margin-top: 1px;
+}
+
+.month-pill-hero-price small {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.month-pill-subdetail {
   font-size: 0.8rem;
   color: var(--text-muted);
   font-weight: 600;
+  line-height: 1.35;
+  margin-top: 2px;
 }
 
-.qty-pill-savings {
-  font-size: 0.74rem;
-  font-weight: 800;
-  color: var(--success-hover);
-  margin-top: 2px;
+.btn-skip-freeze {
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 0.92rem;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-skip-freeze:hover {
+  background: #ffffff;
+  color: var(--text-main);
+  border-color: var(--primary);
 }
 
 /* Grilla de 3x1 para Meses */
@@ -573,6 +769,37 @@ body {
   background: var(--primary);
   border-color: var(--primary);
   color: #ffffff;
+}
+
+/* Opción Especial Inucorn en el selector de servicios */
+.module-select-card.inucorn-select-card {
+  background: var(--inucorn-bg);
+  border-color: var(--inucorn-border);
+}
+
+.module-select-card.inucorn-select-card:hover {
+  border-color: #a855f7;
+  background: #f5f3ff;
+}
+
+.module-select-card.inucorn-select-card.selected {
+  border-color: var(--inucorn-purple);
+  background: #f3e8ff;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18);
+}
+
+.inucorn-chk-icon {
+  border-color: #a855f7;
+}
+
+.module-select-card.inucorn-select-card.selected .inucorn-chk-icon {
+  background: var(--inucorn-purple);
+  border-color: var(--inucorn-purple);
+  color: #ffffff;
+}
+
+.inucorn-text-title {
+  color: #5b21b6;
 }
 
 /* ==========================================================================
@@ -809,23 +1036,31 @@ details.mini-accordion li::before {
 }
 
 .btn-primary {
-  padding: 12px 20px;
+  padding: 13px 22px;
   border-radius: var(--radius-md);
-  border: none;
-  background: var(--primary);
+  border: 2px solid #18181b;
+  background: #18181b;
   color: #ffffff;
-  font-weight: 800;
-  font-size: 1rem;
+  font-weight: 900;
+  font-size: 1.02rem;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.15s ease;
+  box-shadow: 0 4px 0 #000000;
+  transition: all 0.12s ease;
   white-space: nowrap;
 }
 
 .btn-primary:hover {
-  background: var(--primary-hover);
+  background: #09090b;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 0 #000000;
+}
+
+.btn-primary:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #000000;
 }
 
 .btn-secondary {
