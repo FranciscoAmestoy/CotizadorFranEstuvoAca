@@ -1398,9 +1398,11 @@
       : state.selectedServices.ref;
     if (wantsREF) {
       if (state.inputReferredCode) {
+        lines.push(``);
         lines.push(`Mi código de referido es ${state.inputReferredCode}`);
       }
       if (state.wantToRefer) {
+        lines.push(``);
         lines.push(`Mi código de referente es ${state.myReferralCode}`);
       }
     }
