@@ -869,26 +869,53 @@ details.mini-accordion li::before {
   color: var(--inucorn-purple);
 }
 
-.inucorn-wsp-btn {
-  background: var(--inucorn-purple);
-  color: #ffffff;
-  border: none;
-  padding: 14px 24px;
+.inucorn-interest-card {
+  background: #ffffff;
+  border: 2.5px solid var(--inucorn-purple);
   border-radius: var(--radius-lg);
-  font-size: 1.05rem;
-  font-weight: 900;
-  text-decoration: none;
-  display: inline-flex;
-  flex-direction: column;
+  padding: 14px 18px;
+  display: flex;
   align-items: center;
-  gap: 3px;
-  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3);
+  gap: 14px;
+  cursor: pointer;
+  user-select: none;
+  text-align: left;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.12);
   transition: all 0.15s ease;
 }
 
-.inucorn-wsp-btn:hover {
-  background: #6d28d9;
-  transform: translateY(-2px);
+.inucorn-interest-card:hover {
+  background: #faf5ff;
+  transform: translateY(-1px);
+}
+
+.inucorn-interest-checkbox {
+  width: 24px;
+  height: 24px;
+  accent-color: var(--inucorn-purple);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.inucorn-interest-text-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.inucorn-interest-title {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--inucorn-purple);
+}
+
+.inucorn-interest-sub {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #6b21a8;
+  line-height: 1.3;
 }
 
 /* ==========================================================================

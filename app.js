@@ -19,6 +19,7 @@
 
     // Decisiones del cliente
     selectedServices: { v: false, cm: false, to: false, inu: false }, // Usado si entra sin parámetros
+    inucornInterested: true, // Default checked según solicitud
     videoMode: null, // 'graboEdiPubli' | 'ediPubli'
     videoQty: 4, // 1 a 30 videos por mes
     videoMonths: 3, // 1, 2, 3, 6 meses
@@ -1009,9 +1010,6 @@
   // Paso INU: Cupón Inucorn
   function renderStep_InuBanner() {
     const inu = CFG.inucorn;
-    const clientLabel = state.clientName || (state.businessName || "un cliente");
-    const msg = `Hola! Soy ${clientLabel} y escribo de parte de Fran Estuvo Acá porque me gustaría solicitar un presupuesto!`;
-    const inuWspUrl = `https://wa.me/${inu.whatsappNumber}?text=${encodeURIComponent(msg)}`;
 
     return `
       <div class="step-header">
@@ -1022,11 +1020,19 @@
       <div class="inucorn-step-card">
         <div style="font-size:1.1rem; font-weight:800; color:#5b21b6;">Tu código de descuento exclusivo:</div>
         <div class="inucorn-coupon-box">${inu.codigoCupon}</div>
-        
-        <a href="${inuWspUrl}" target="_blank" rel="noopener noreferrer" class="inucorn-wsp-btn">
-          <span>💬 Contactar a Inucorn ↗</span>
-          <small style="font-size:0.75rem; opacity:0.9;">(Se abre en pestaña nueva de WhatsApp)</small>
-        </a>
+
+        <label class="inucorn-interest-card" for="chk-inu-interest">
+          <input 
+            type="checkbox" 
+            id="chk-inu-interest" 
+            class="inucorn-interest-checkbox" 
+            ${state.inucornInterested ? "checked" : ""} 
+          />
+          <div class="inucorn-interest-text-col">
+            <span class="inucorn-interest-title">¡Me interesa!</span>
+            <span class="inucorn-interest-sub">Fran te incluye este beneficio al coordinar por WhatsApp</span>
+          </div>
+        </label>
       </div>
 
       <button type="button" class="btn-primary" style="width:100%; justify-content:center; padding:16px; margin-top:24px; font-size:1.15rem;" data-action="advance-step">
@@ -1100,19 +1106,19 @@
       `);
     }
 
-    // Item Inucorn (si lo seleccionó)
+    // Item Inucorn (si lo seleccionó y mantuvo el checkbox tildado)
     const wantsINU = state.hasExplicitParams
       ? state.enabledModules.inu
       : state.selectedServices.inu;
-    if (wantsINU) {
+    if (wantsINU && state.inucornInterested) {
       items.push(`
         <div class="final-summary-item" style="border-left: 3px solid var(--inucorn-purple); padding-left: 10px;">
           <div>
             <div class="final-item-title inucorn-text-title">🎁 Beneficio Imprenta Inucorn (10% OFF)</div>
-            <div class="final-item-desc">Código exclusivo reservado: <strong>${CFG.inucorn.codigoCupon}</strong></div>
+            <div class="final-item-desc">Descuento reservado para coordinar con Fran (Código: <strong>${CFG.inucorn.codigoCupon}</strong>)</div>
           </div>
           <div class="final-item-price" style="color:var(--inucorn-purple); font-size:1rem;">
-            Activado
+            Incluido
           </div>
         </div>
       `);
@@ -1238,13 +1244,6 @@
       lines.push(`*${tq.label}:* Pago único -> *${formatARS(tq.totalFinal)}*`);
     }
 
-    const wantsINU = state.hasExplicitParams
-      ? state.enabledModules.inu
-      : state.selectedServices.inu;
-    if (wantsINU) {
-      lines.push(`*Beneficio Imprenta Inucorn:* 10% OFF activado (Código: ${CFG.inucorn.codigoCupon})`);
-    }
-
     lines.push(``);
     lines.push(`*TOTAL COTIZADO:* *${formatARS(totals.totalFinal)}*`);
     if (totals.totalSaved > 0) {
@@ -1257,6 +1256,14 @@
           state.uberOneWay * 2
         )} por visita`
       );
+    }
+
+    const wantsINU = state.hasExplicitParams
+      ? state.enabledModules.inu
+      : state.selectedServices.inu;
+    if (wantsINU && state.inucornInterested) {
+      lines.push(``);
+      lines.push(`Además, me interesa el descuento de Imprenta Inucorn`);
     }
 
     lines.push(``);
@@ -1451,6 +1458,13 @@
           '[data-action="submit-client-info"]'
         );
         if (submitBtn) submitBtn.click();
+      }
+    });
+
+    // Checkbox de interés de Inucorn
+    document.body.addEventListener("change", (e) => {
+      if (e.target.id === "chk-inu-interest") {
+        state.inucornInterested = e.target.checked;
       }
     });
 
