@@ -1030,7 +1030,6 @@
           />
           <div class="inucorn-interest-text-col">
             <span class="inucorn-interest-title">¡Me interesa!</span>
-            <span class="inucorn-interest-sub">Fran te incluye este beneficio al coordinar por WhatsApp</span>
           </div>
         </label>
       </div>
