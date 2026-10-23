@@ -873,13 +873,14 @@ details.mini-accordion li::before {
   background: #ffffff;
   border: 2.5px solid var(--inucorn-purple);
   border-radius: var(--radius-lg);
-  padding: 14px 18px;
+  padding: 14px 20px;
   display: flex;
   align-items: center;
-  gap: 14px;
+  justify-content: center;
+  gap: 12px;
   cursor: pointer;
   user-select: none;
-  text-align: left;
+  text-align: center;
   max-width: 440px;
   width: 100%;
   box-shadow: 0 4px 12px rgba(124, 58, 237, 0.12);
@@ -902,6 +903,9 @@ details.mini-accordion li::before {
 .inucorn-interest-text-col {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   gap: 2px;
 }
 
@@ -909,6 +913,7 @@ details.mini-accordion li::before {
   font-size: 1.15rem;
   font-weight: 900;
   color: var(--inucorn-purple);
+  text-align: center;
 }
 
 .inucorn-interest-sub {

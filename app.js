@@ -535,7 +535,7 @@
         <div class="module-select-card inucorn-select-card ${isInu ? "selected" : ""}" data-action="toggle-service-pick" data-service="inu">
           <div class="module-checkbox-icon inucorn-chk-icon">${isInu ? "✓" : ""}</div>
           <div>
-            <div class="decision-card-title inucorn-text-title">🎁 Descuento especial en imprenta y papelería (Inucorn)</div>
+            <div class="decision-card-title inucorn-text-title">🎁 Descuento especial en imprenta y papelería Inucorn</div>
             <div class="decision-card-desc">10% OFF en folletería, tarjetas, stickers y cartelería para tu local o packaging con el código de Fran.</div>
           </div>
         </div>
@@ -728,7 +728,7 @@
         return `
           <div class="month-pill-card ${isSel ? "selected" : ""}" data-action="choose-v-months" data-months="12">
             <div class="month-pill-header">
-              <span class="month-pill-title">12 Meses (1 Año)</span>
+              <span class="month-pill-title">12 Meses</span>
               <span class="month-pill-badge" style="background:#fef3c7; color:#92400e;">👑 -40% OFF</span>
             </div>
             <div class="month-pill-hero-price">${formatARS(quote.effectivePerMonth)} <small>/ mes</small></div>
@@ -905,7 +905,7 @@
         return `
           <div class="month-pill-card ${isSel ? "selected" : ""}" data-action="choose-cm-months" data-months="12">
             <div class="month-pill-header">
-              <span class="month-pill-title">12 Meses (1 Año)</span>
+              <span class="month-pill-title">12 Meses</span>
               <span class="month-pill-badge" style="background:#fef3c7; color:#92400e;">👑 -40% OFF</span>
             </div>
             <div class="month-pill-hero-price">${formatARS(quote.effectivePerMonth)} <small>/ mes</small></div>
@@ -1028,9 +1028,7 @@
             class="inucorn-interest-checkbox" 
             ${state.inucornInterested ? "checked" : ""} 
           />
-          <div class="inucorn-interest-text-col">
-            <span class="inucorn-interest-title">¡Me interesa!</span>
-          </div>
+          <span class="inucorn-interest-title">¡Me interesa!</span>
         </label>
       </div>
 
