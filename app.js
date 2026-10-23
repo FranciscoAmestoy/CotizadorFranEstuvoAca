@@ -7,10 +7,20 @@
 (function () {
   const CFG = window.COTIZADOR_CONFIG;
 
+  // Generador de código alfanumérico de 5 caracteres (distingue mayús de minús, sin símbolos)
+  function generateReferralCode() {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let code = "";
+    for (let i = 0; i < 5; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+  }
+
   // Estado global
   const state = {
     // Parámetros de URL
-    enabledModules: { v: false, cm: false, to: false, inu: false },
+    enabledModules: { v: false, cm: false, to: false, inu: false, ref: false },
     hasExplicitParams: false,
     clientName: "",
     businessName: "",
@@ -18,8 +28,14 @@
     uberOneWay: 0,
 
     // Decisiones del cliente
-    selectedServices: { v: false, cm: false, to: false, inu: false }, // Usado si entra sin parámetros
+    selectedServices: { v: false, cm: false, to: false, inu: false, ref: false }, // Usado si entra sin parámetros
     inucornInterested: true, // Default checked según solicitud
+
+    // Sistema de Referidos (25% OFF)
+    myReferralCode: generateReferralCode(),
+    inputReferredCode: "",
+    wantToRefer: false, // Default desmarcado según solicitud
+
     videoMode: null, // 'graboEdiPubli' | 'ediPubli'
     videoQty: 4, // 1 a 30 videos por mes
     videoMonths: 3, // 1, 2, 3, 6 meses
@@ -179,19 +195,22 @@
     const hasCM = keysLower.includes("cm");
     const hasTO = keysLower.includes("to");
     const hasINU = keysLower.includes("inu");
+    const hasREF = keysLower.includes("ref");
 
-    if (hasV || hasCM || hasTO || hasINU) {
+    if (hasV || hasCM || hasTO || hasINU || hasREF) {
       state.hasExplicitParams = true;
       state.enabledModules.v = hasV;
       state.enabledModules.cm = hasCM;
       state.enabledModules.to = hasTO;
       state.enabledModules.inu = hasINU;
+      state.enabledModules.ref = hasREF;
     } else {
       state.hasExplicitParams = false;
       state.enabledModules.v = false;
       state.enabledModules.cm = false;
       state.enabledModules.to = false;
       state.enabledModules.inu = false;
+      state.enabledModules.ref = false;
     }
 
     const clientParam = params.get("c") || params.get("cliente") || "";
@@ -244,6 +263,9 @@
     const wantsINU = state.hasExplicitParams
       ? state.enabledModules.inu
       : state.selectedServices.inu;
+    const wantsREF = state.hasExplicitParams
+      ? state.enabledModules.ref
+      : state.selectedServices.ref;
 
     // Pasos de Videos
     if (wantsV) {
@@ -265,9 +287,9 @@
       queue.push({ id: "to_choice", title: "Catálogo / Tienda" });
     }
 
-    // Paso de Inucorn (si está en la URL o si lo seleccionó en servicios iniciales)
-    if (wantsINU) {
-      queue.push({ id: "inu_banner", title: "Beneficio Imprenta" });
+    // Paso de Beneficios / Cupones (Inucorn y/o Referidos en la misma pantalla)
+    if (wantsINU || wantsREF) {
+      queue.push({ id: "benefits_banner", title: "Beneficios y Descuentos" });
     }
 
     // Paso final: Resumen y cierre
@@ -417,8 +439,9 @@
       case "to_choice":
         html = renderStep_TOChoice();
         break;
+      case "benefits_banner":
       case "inu_banner":
-        html = renderStep_InuBanner();
+        html = renderStep_Benefits();
         break;
       case "summary":
         html = renderStep_Summary();
@@ -489,6 +512,7 @@
     const isCM = state.selectedServices.cm;
     const isTO = state.selectedServices.to;
     const isInu = state.selectedServices.inu;
+    const isRef = state.selectedServices.ref;
 
     let greetingText = "";
     if (state.clientName && state.businessName) {
@@ -537,6 +561,17 @@
           <div>
             <div class="decision-card-title inucorn-text-title">🎁 Descuento especial en imprenta y papelería Inucorn</div>
             <div class="decision-card-desc">10% OFF en folletería, tarjetas, stickers y cartelería para tu local o packaging con el código de Fran.</div>
+          </div>
+        </div>
+
+        <div class="module-select-card referral-select-card ${isRef ? "selected" : ""}" data-action="toggle-service-pick" data-service="ref">
+          <div class="module-checkbox-icon referral-chk-icon">${isRef ? "✓" : ""}</div>
+          <div style="flex:1;">
+            <div class="decision-card-title referral-text-title">🤝 25% OFF en tu pedido con tu código de referido</div>
+            <div class="decision-card-desc">
+              Accedé a 25% OFF recomendando o ingresando el código de un colega.
+              <a href="javascript:void(0)" class="referral-terms-link" data-action="open-referral-terms">Ver términos y condiciones</a>
+            </div>
           </div>
         </div>
       </div>
@@ -1007,29 +1042,99 @@
     `;
   }
 
-  // Paso INU: Cupón Inucorn
-  function renderStep_InuBanner() {
-    const inu = CFG.inucorn;
+  // Paso de Beneficios y Cupones (Inucorn y/o Referidos en la misma pantalla)
+  function renderStep_Benefits() {
+    const wantsINU = state.hasExplicitParams
+      ? state.enabledModules.inu
+      : state.selectedServices.inu;
+    const wantsREF = state.hasExplicitParams
+      ? state.enabledModules.ref
+      : state.selectedServices.ref;
+
+    let inuHTML = "";
+    if (wantsINU) {
+      const inu = CFG.inucorn;
+      inuHTML = `
+        <div class="inucorn-step-card">
+          <div style="font-size:1.1rem; font-weight:800; color:#5b21b6;">🎁 10% OFF en Imprenta Inucorn</div>
+          <p style="font-size:0.88rem; color:#6b21a8; line-height:1.4;">${inu.descripcion}</p>
+          <div class="inucorn-coupon-box">${inu.codigoCupon}</div>
+
+          <label class="inucorn-interest-card" for="chk-inu-interest">
+            <input 
+              type="checkbox" 
+              id="chk-inu-interest" 
+              class="inucorn-interest-checkbox" 
+              ${state.inucornInterested ? "checked" : ""} 
+            />
+            <span class="inucorn-interest-title">¡Me interesa!</span>
+          </label>
+        </div>
+      `;
+    }
+
+    let refHTML = "";
+    if (wantsREF) {
+      refHTML = `
+        <div class="referral-step-card">
+          <div style="font-size:1.15rem; font-weight:900; color:#92400e;">🤝 Programa de Referidos (25% OFF)</div>
+          <p style="font-size:0.88rem; color:#b45309; line-height:1.4;">
+            Descuento válido al cancelar el saldo, bajo condición de seña previa del referido.
+            <br/>
+            <a href="javascript:void(0)" class="referral-terms-link" data-action="open-referral-terms">Ver términos y condiciones</a>
+          </p>
+
+          <!-- Input para código preexistente -->
+          <div class="referral-input-box">
+            <label for="input-referred-code" style="display:block; font-size:0.9rem; font-weight:800; color:#78350f; margin-bottom:6px;">
+              ¿Tenés el código de un colega o amigo que te recomendó?
+            </label>
+            <input 
+              type="text" 
+              id="input-referred-code" 
+              class="lead-input referral-input" 
+              placeholder="Ingresá el código acá (ej: k7Mp9)" 
+              value="${state.inputReferredCode || ""}" 
+              maxlength="10"
+            />
+          </div>
+
+          <!-- Código autogenerado para compartir -->
+          <div class="referral-code-display-box">
+            <div style="font-size:0.82rem; font-weight:800; color:#92400e; text-transform:uppercase;">Tu código de referente para compartir:</div>
+            <div class="referral-badge-code">${state.myReferralCode}</div>
+          </div>
+
+          <!-- Checkbox para querer recomendar -->
+          <label class="referral-want-toggle" for="chk-want-refer">
+            <input 
+              type="checkbox" 
+              id="chk-want-refer" 
+              class="referral-want-checkbox" 
+              ${state.wantToRefer ? "checked" : ""} 
+            />
+            <span style="font-size:1.05rem; font-weight:800; color:#92400e;">¡Lo quiero! Recomendaré a alguien</span>
+          </label>
+        </div>
+      `;
+    }
+
+    let titleText = "🎁 ¡Tus Beneficios y Descuentos!";
+    if (wantsINU && !wantsREF) {
+      titleText = "🎁 ¡Tenés 10% OFF en Imprenta Inucorn!";
+    } else if (wantsREF && !wantsINU) {
+      titleText = "🤝 ¡25% OFF con Código de Referido!";
+    }
 
     return `
       <div class="step-header">
-        <h1 class="step-question-title">🎁 ¡Tenés 10% OFF en Imprenta Inucorn!</h1>
-        <p class="step-question-subtitle">${inu.descripcion}</p>
+        <h1 class="step-question-title">${titleText}</h1>
+        <p class="step-question-subtitle">Aprovechá estos beneficios especiales para sumar a tu cotización con Fran.</p>
       </div>
 
-      <div class="inucorn-step-card">
-        <div style="font-size:1.1rem; font-weight:800; color:#5b21b6;">Tu código de descuento exclusivo:</div>
-        <div class="inucorn-coupon-box">${inu.codigoCupon}</div>
-
-        <label class="inucorn-interest-card" for="chk-inu-interest">
-          <input 
-            type="checkbox" 
-            id="chk-inu-interest" 
-            class="inucorn-interest-checkbox" 
-            ${state.inucornInterested ? "checked" : ""} 
-          />
-          <span class="inucorn-interest-title">¡Me interesa!</span>
-        </label>
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        ${inuHTML}
+        ${refHTML}
       </div>
 
       <button type="button" class="btn-primary" style="width:100%; justify-content:center; padding:16px; margin-top:24px; font-size:1.15rem;" data-action="advance-step">
@@ -1116,6 +1221,31 @@
           </div>
           <div class="final-item-price" style="color:var(--inucorn-purple); font-size:1rem;">
             Incluido
+          </div>
+        </div>
+      `);
+    }
+
+    // Item Referidos (si lo seleccionó y tiene código ingresado o quiere recomendar)
+    const wantsREF = state.hasExplicitParams
+      ? state.enabledModules.ref
+      : state.selectedServices.ref;
+    if (wantsREF && (state.wantToRefer || state.inputReferredCode)) {
+      const details = [];
+      if (state.inputReferredCode) {
+        details.push(`Código de quien te recomendó: <strong>${state.inputReferredCode}</strong>`);
+      }
+      if (state.wantToRefer) {
+        details.push(`Tu código personal: <strong>${state.myReferralCode}</strong>`);
+      }
+      items.push(`
+        <div class="final-summary-item" style="border-left: 3px solid #f59e0b; padding-left: 10px;">
+          <div>
+            <div class="final-item-title" style="color:#b45309;">🤝 Descuento por Referidos (25% OFF)</div>
+            <div class="final-item-desc">${details.join(" • ")} (a aplicar al cancelar el saldo)</div>
+          </div>
+          <div class="final-item-price" style="color:#d97706; font-size:1rem;">
+            Registrado
           </div>
         </div>
       `);
@@ -1263,6 +1393,18 @@
       lines.push(`Además, me interesa el descuento de Imprenta Inucorn`);
     }
 
+    const wantsREF = state.hasExplicitParams
+      ? state.enabledModules.ref
+      : state.selectedServices.ref;
+    if (wantsREF) {
+      if (state.inputReferredCode) {
+        lines.push(`Mi código de referido es ${state.inputReferredCode}`);
+      }
+      if (state.wantToRefer) {
+        lines.push(`Mi código de referente es ${state.myReferralCode}`);
+      }
+    }
+
     lines.push(``);
     lines.push(`¿Coordinamos para avanzar?`);
 
@@ -1283,6 +1425,17 @@
       const action = target.getAttribute("data-action");
 
       switch (action) {
+        case "open-referral-terms": {
+          e.stopPropagation();
+          openReferralTermsModal();
+          break;
+        }
+
+        case "close-referral-terms": {
+          closeReferralTermsModal();
+          break;
+        }
+
         case "submit-client-info": {
           const nameInput = document.getElementById("lead-client-name");
           const bizInput = document.getElementById("lead-business-name");
@@ -1330,9 +1483,10 @@
             !state.selectedServices.v &&
             !state.selectedServices.cm &&
             !state.selectedServices.to &&
-            !state.selectedServices.inu
+            !state.selectedServices.inu &&
+            !state.selectedServices.ref
           ) {
-            alert("Elegí al menos un servicio para comenzar.");
+            alert("Elegí al menos un servicio o beneficio para comenzar.");
             return;
           }
           advanceStep();
@@ -1458,10 +1612,20 @@
       }
     });
 
-    // Checkbox de interés de Inucorn
+    // Checkbox de interés de Inucorn y de Referidos
     document.body.addEventListener("change", (e) => {
       if (e.target.id === "chk-inu-interest") {
         state.inucornInterested = e.target.checked;
+      }
+      if (e.target.id === "chk-want-refer") {
+        state.wantToRefer = e.target.checked;
+      }
+    });
+
+    // Input de código de referido preexistente
+    document.body.addEventListener("input", (e) => {
+      if (e.target.id === "input-referred-code") {
+        state.inputReferredCode = e.target.value.trim();
       }
     });
 
@@ -1471,6 +1635,7 @@
       "adm-chk-cm",
       "adm-chk-to",
       "adm-chk-inu",
+      "adm-chk-ref",
       "adm-client-name",
       "adm-business-name",
       "adm-client-note",
@@ -1496,8 +1661,16 @@
   }
 
   // ==========================================================================
-  // 7. MODO ADMIN / MANTENIMIENTO PROTEGIDO (SHA-256)
+  // 7. MODALES Y MANTENIMIENTO PROTEGIDO (SHA-256)
   // ==========================================================================
+
+  function openReferralTermsModal() {
+    document.getElementById("referral-terms-modal")?.classList.remove("hidden");
+  }
+
+  function closeReferralTermsModal() {
+    document.getElementById("referral-terms-modal")?.classList.add("hidden");
+  }
 
   async function sha256Hex(text) {
     const encoder = new TextEncoder();
@@ -1537,10 +1710,11 @@
 
   function updateAdminGeneratedUrl() {
     const baseUrl = window.location.origin + window.location.pathname;
-    const chkV = document.getElementById("adm-chk-v").checked;
-    const chkCM = document.getElementById("adm-chk-cm").checked;
-    const chkTO = document.getElementById("adm-chk-to").checked;
-    const chkINU = document.getElementById("adm-chk-inu").checked;
+    const chkV = document.getElementById("adm-chk-v")?.checked;
+    const chkCM = document.getElementById("adm-chk-cm")?.checked;
+    const chkTO = document.getElementById("adm-chk-to")?.checked;
+    const chkINU = document.getElementById("adm-chk-inu")?.checked;
+    const chkREF = document.getElementById("adm-chk-ref")?.checked;
     const client = document.getElementById("adm-client-name").value.trim();
     const bizEl = document.getElementById("adm-business-name");
     const biz = bizEl ? bizEl.value.trim() : "";
@@ -1555,10 +1729,10 @@
     if (chkCM) parts.push("cm");
     if (chkTO) parts.push("to");
     if (chkINU) parts.push("inu");
+    if (chkREF) parts.push("ref");
     if (client) parts.push(`c=${encodeURIComponent(client)}`);
     if (biz) parts.push(`b=${encodeURIComponent(biz)}`);
     if (note) parts.push(`nota=${encodeURIComponent(note)}`);
-    if (uber > 0) parts.push(`uber=${uber}`);
     if (uber > 0) parts.push(`uber=${uber}`);
 
     const finalUrl =

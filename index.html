@@ -61,6 +61,22 @@
     <button type="button" class="admin-lock-btn" data-action="open-admin">🔒 Mantenimiento</button>
   </div>
 
+  <!-- MODAL DE TÉRMINOS Y CONDICIONES - REFERIDOS -->
+  <div id="referral-terms-modal" class="modal-overlay hidden">
+    <div class="modal-card" style="max-width: 520px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h3 style="font-size:1.2rem; font-weight:900; color:var(--text-main);">📋 Términos y Condiciones</h3>
+        <button type="button" class="btn-secondary" style="padding:6px 12px;" data-action="close-referral-terms">✕ Cerrar</button>
+      </div>
+      <div style="font-size:0.95rem; line-height:1.55; color:var(--text-secondary); background:var(--bg-page); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px;">
+        Descuento válido únicamente LUEGO de abonada la seña del servicio y se aplicará al momento de cancelar el saldo, bajo condición que el referido haya realizado una seña ANTES de dicho momento. Máximo 1 descuento por código de referido. El descuento aplica a ambas personas. Sin obligación de compra. No reembolsable.
+      </div>
+      <div style="margin-top:16px; text-align:right;">
+        <button type="button" class="btn-primary" style="padding:10px 20px;" data-action="close-referral-terms">Entendido</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL DE MANTENIMIENTO / GENERADOR DE LINKS (PROTEGIDO) -->
   <div id="admin-modal" class="modal-overlay hidden">
     <div class="modal-card">
@@ -104,6 +120,10 @@
             <label class="checkbox-pill" style="border-color:var(--inucorn-purple); color:var(--inucorn-purple);">
               <input type="checkbox" id="adm-chk-inu" />
               <span>inu (10% OFF Inucorn)</span>
+            </label>
+            <label class="checkbox-pill" style="border-color:#f59e0b; color:#b45309;">
+              <input type="checkbox" id="adm-chk-ref" />
+              <span>ref (25% OFF Referidos)</span>
             </label>
           </div>
         </div>

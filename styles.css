@@ -802,6 +802,51 @@ body {
   color: #5b21b6;
 }
 
+/* Opción Especial Referidos en el selector de servicios */
+.module-select-card.referral-select-card {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.module-select-card.referral-select-card:hover {
+  border-color: #f59e0b;
+  background: #fef3c7;
+}
+
+.module-select-card.referral-select-card.selected {
+  border-color: #d97706;
+  background: #fef3c7;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+}
+
+.referral-chk-icon {
+  border-color: #d97706;
+}
+
+.module-select-card.referral-select-card.selected .referral-chk-icon {
+  background: #d97706;
+  border-color: #d97706;
+  color: #ffffff;
+}
+
+.referral-text-title {
+  color: #92400e;
+}
+
+.referral-terms-link {
+  color: #b45309;
+  text-decoration: underline;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 0.85rem;
+}
+
+.referral-terms-link:hover {
+  color: #78350f;
+}
+
 /* ==========================================================================
    ACORDEÓN DE DETALLES
    ========================================================================== */
@@ -921,6 +966,78 @@ details.mini-accordion li::before {
   font-weight: 600;
   color: #6b21a8;
   line-height: 1.3;
+}
+
+/* ==========================================================================
+   BENEFICIO REFERIDOS STEP
+   ========================================================================== */
+.referral-step-card {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 3px dashed #f59e0b;
+  border-radius: var(--radius-xl);
+  padding: 24px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.referral-code-display-box {
+  background: #ffffff;
+  border: 2px solid #d97706;
+  border-radius: var(--radius-md);
+  padding: 12px 20px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.referral-badge-code {
+  font-size: 1.55rem;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: #b45309;
+  font-family: monospace;
+}
+
+.referral-input-box {
+  width: 100%;
+  max-width: 440px;
+  text-align: left;
+}
+
+.referral-want-toggle {
+  background: #ffffff;
+  border: 2.5px solid #d97706;
+  border-radius: var(--radius-lg);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+  text-align: center;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.12);
+  transition: all 0.15s ease;
+}
+
+.referral-want-toggle:hover {
+  background: #fffdf5;
+  transform: translateY(-1px);
+}
+
+.referral-want-checkbox {
+  width: 24px;
+  height: 24px;
+  accent-color: #d97706;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 /* ==========================================================================
