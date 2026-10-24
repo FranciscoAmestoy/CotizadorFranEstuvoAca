@@ -1259,7 +1259,7 @@ details.mini-accordion li::before {
 .modal-card {
   background: #ffffff;
   border-radius: var(--radius-xl);
-  max-width: 620px;
+  max-width: 680px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
@@ -1313,4 +1313,171 @@ details.mini-accordion li::before {
   word-break: break-all;
   margin: 10px 0;
   font-size: 0.88rem;
+}
+
+/* ==========================================================================
+   ADMIN REWORK: TABS, PRECIOS, DESCUENTOS Y CONTROLES
+   ========================================================================== */
+.admin-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 18px;
+}
+
+.admin-tab-btn {
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  padding: 10px 16px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s ease;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.admin-tab-btn:hover {
+  color: var(--text-main);
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.admin-tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  background: rgba(8, 145, 178, 0.06);
+}
+
+.admin-info-note {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  font-size: 0.86rem;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+  line-height: 1.45;
+}
+
+.admin-card-section {
+  background: #fafaf9;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+
+.admin-section-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-grid-2col {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.admin-grid-3col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.admin-grid-5col {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+@media (max-width: 600px) {
+  .admin-grid-2col,
+  .admin-grid-3col {
+    grid-template-columns: 1fr;
+  }
+  .admin-grid-5col {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.admin-input-group {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.admin-input-prefix {
+  position: absolute;
+  left: 12px;
+  font-weight: 800;
+  color: var(--text-muted);
+  pointer-events: none;
+  font-size: 0.95rem;
+}
+
+.admin-input-suffix {
+  position: absolute;
+  right: 12px;
+  font-weight: 800;
+  color: var(--text-muted);
+  pointer-events: none;
+  font-size: 0.95rem;
+}
+
+.admin-input-group input.admin-number-input {
+  width: 100%;
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.admin-input-group .admin-input-prefix + input {
+  padding-left: 28px;
+}
+
+.admin-input-group input.admin-number-input:has(+ .admin-input-suffix),
+.admin-input-group input.admin-number-input {
+  padding-right: 28px;
+}
+
+.admin-input-hint {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.admin-status-message {
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
+  font-weight: 700;
+  margin-top: 12px;
+  text-align: center;
+}
+
+.admin-status-message.success {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.admin-status-message.info {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #7dd3fc;
+}
+
+.admin-actions-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
 }

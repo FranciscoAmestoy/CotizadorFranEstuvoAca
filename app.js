@@ -6,6 +6,92 @@
 
 (function () {
   const CFG = window.COTIZADOR_CONFIG;
+  const DEFAULT_CFG = JSON.parse(JSON.stringify(window.COTIZADOR_CONFIG));
+
+  function applyConfigOverrides(custom) {
+    if (!custom) return;
+    if (custom.videos) {
+      if (
+        custom.videos.graboEdiPubli !== undefined &&
+        CFG.videos?.modalidades?.graboEdiPubli
+      ) {
+        CFG.videos.modalidades.graboEdiPubli.precioBase = Number(
+          custom.videos.graboEdiPubli
+        );
+      }
+      if (
+        custom.videos.ediPubli !== undefined &&
+        CFG.videos?.modalidades?.ediPubli
+      ) {
+        CFG.videos.modalidades.ediPubli.precioBase = Number(
+          custom.videos.ediPubli
+        );
+      }
+      if (custom.videos.descuentos && CFG.videos?.descuentoPorUnidad) {
+        Object.keys(custom.videos.descuentos).forEach((u) => {
+          const item = CFG.videos.descuentoPorUnidad.find(
+            (d) => d.unidad === Number(u)
+          );
+          if (item) item.descuentoPct = Number(custom.videos.descuentos[u]);
+        });
+      }
+    }
+    if (custom.cm && CFG.cm?.planes) {
+      if (custom.cm.presencia !== undefined) {
+        const p = CFG.cm.planes.find((pl) => pl.id === "presencia");
+        if (p) p.precioMensual = Number(custom.cm.presencia);
+      }
+      if (custom.cm.crecimiento !== undefined) {
+        const p = CFG.cm.planes.find((pl) => pl.id === "crecimiento");
+        if (p) p.precioMensual = Number(custom.cm.crecimiento);
+      }
+      if (custom.cm.total !== undefined) {
+        const p = CFG.cm.planes.find((pl) => pl.id === "total");
+        if (p) p.precioMensual = Number(custom.cm.total);
+      }
+    }
+    if (custom.tienda && CFG.tienda) {
+      if (custom.tienda.catalogoWsp !== undefined) {
+        const o = CFG.tienda.opciones?.find((op) => op.id === "catalogoWsp");
+        if (o) o.precioUnico = Number(custom.tienda.catalogoWsp);
+      }
+      if (custom.tienda.tiendaNube !== undefined) {
+        const o = CFG.tienda.opciones?.find((op) => op.id === "tiendaNube");
+        if (o) o.precioUnico = Number(custom.tienda.tiendaNube);
+      }
+      if (custom.tienda.ambos !== undefined) {
+        CFG.tienda.precioAmbos = Number(custom.tienda.ambos);
+      }
+    }
+    if (custom.meses && CFG.mesesOpciones) {
+      Object.keys(custom.meses).forEach((m) => {
+        const found = CFG.mesesOpciones.find((mo) => mo.meses === Number(m));
+        if (found) found.descuentoPct = Number(custom.meses[m]);
+      });
+    }
+    if (custom.inucorn && CFG.inucorn) {
+      if (custom.inucorn.descuentoPct !== undefined) {
+        CFG.inucorn.descuentoPct = Number(custom.inucorn.descuentoPct);
+      }
+    }
+    if (custom.referidos && CFG.referidos) {
+      if (custom.referidos.descuentoPct !== undefined) {
+        CFG.referidos.descuentoPct = Number(custom.referidos.descuentoPct);
+      }
+    }
+  }
+
+  function loadPersistedConfig() {
+    try {
+      const saved = localStorage.getItem("FEA_CUSTOM_CONFIG");
+      if (saved) {
+        const custom = JSON.parse(saved);
+        applyConfigOverrides(custom);
+      }
+    } catch (e) {
+      console.warn("No se pudo cargar la configuración personalizada de localStorage", e);
+    }
+  }
 
   // Generador de código alfanumérico de 5 caracteres (distingue mayús de minús, sin símbolos)
   function generateReferralCode() {
@@ -56,12 +142,25 @@
   }
 
   function getVideoUnitDiscountPct(unitIndex1Based) {
-    if (unitIndex1Based <= 1) return 0;
-    if (unitIndex1Based === 2) return 10;
-    if (unitIndex1Based === 3) return 20;
-    if (unitIndex1Based === 4) return 30;
-    if (unitIndex1Based === 5) return 40;
-    return 50; // Del 6° en adelante 50% c/u
+    if (
+      !CFG.videos ||
+      !CFG.videos.descuentoPorUnidad ||
+      !CFG.videos.descuentoPorUnidad.length
+    ) {
+      if (unitIndex1Based <= 1) return 0;
+      if (unitIndex1Based === 2) return 10;
+      if (unitIndex1Based === 3) return 20;
+      if (unitIndex1Based === 4) return 30;
+      if (unitIndex1Based === 5) return 40;
+      return 50;
+    }
+    const found = CFG.videos.descuentoPorUnidad.find(
+      (d) => d.unidad === unitIndex1Based
+    );
+    if (found) return found.descuentoPct;
+    const last =
+      CFG.videos.descuentoPorUnidad[CFG.videos.descuentoPorUnidad.length - 1];
+    return last ? last.descuentoPct : 50;
   }
 
   function getMonthDiscountPct(months) {
@@ -127,18 +226,27 @@
 
   function calculateTiendaQuote(choice) {
     if (!choice || choice === "skip") return { totalFinal: 0, label: "" };
+    const wspObj = CFG.tienda?.opciones?.find((o) => o.id === "catalogoWsp");
+    const nubeObj = CFG.tienda?.opciones?.find((o) => o.id === "tiendaNube");
+    const wsp = wspObj ? wspObj.precioUnico : 50000;
+    const nube = nubeObj ? nubeObj.precioUnico : 50000;
+    const ambos =
+      CFG.tienda?.precioAmbos !== undefined
+        ? CFG.tienda.precioAmbos
+        : wsp + nube;
+
     if (choice === "catalogoWsp") {
-      return { totalFinal: 50000, label: "Catálogo en WhatsApp Business" };
+      return { totalFinal: wsp, label: "Catálogo en WhatsApp Business" };
     }
     if (choice === "tiendaNube") {
       return {
-        totalFinal: 50000,
+        totalFinal: nube,
         label: "Tienda Online (Tienda Nube / Empretienda)",
       };
     }
     if (choice === "ambos") {
       return {
-        totalFinal: 100000,
+        totalFinal: ambos,
         label: "Catálogo WhatsApp + Tienda Online",
       };
     }
@@ -560,16 +668,16 @@
           <div class="module-checkbox-icon inucorn-chk-icon">${isInu ? "✓" : ""}</div>
           <div>
             <div class="decision-card-title inucorn-text-title">🎁 Descuento especial en imprenta y papelería Inucorn</div>
-            <div class="decision-card-desc">10% OFF en folletería, tarjetas, stickers y cartelería para tu local o packaging con el código de Fran.</div>
+            <div class="decision-card-desc">${CFG.inucorn?.descuentoPct || 10}% OFF en folletería, tarjetas, stickers y cartelería para tu local o packaging con el código de Fran.</div>
           </div>
         </div>
 
         <div class="module-select-card referral-select-card ${isRef ? "selected" : ""}" data-action="toggle-service-pick" data-service="ref">
           <div class="module-checkbox-icon referral-chk-icon">${isRef ? "✓" : ""}</div>
           <div style="flex:1;">
-            <div class="decision-card-title referral-text-title">🤝 25% OFF en tu pedido con tu código de referido</div>
+            <div class="decision-card-title referral-text-title">🤝 ${CFG.referidos?.descuentoPct || 25}% OFF en tu pedido con tu código de referido</div>
             <div class="decision-card-desc">
-              Accedé a 25% OFF recomendando o ingresando el código de un amigo.
+              Accedé a ${CFG.referidos?.descuentoPct || 25}% OFF recomendando o ingresando el código de un amigo.
               <a href="javascript:void(0)" class="referral-terms-link" data-action="open-referral-terms">Ver términos y condiciones</a>
             </div>
           </div>
@@ -610,7 +718,7 @@
           </p>
 
           <div class="decision-card-footer">
-            <span class="decision-card-price">Desde $50.000 <small style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">por video base</small></span>
+            <span class="decision-card-price">Desde ${formatARS(CFG.videos.modalidades.graboEdiPubli.precioBase)} <small style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">por video base</small></span>
             <span class="decision-card-notice">⚠️ No incluye viáticos (se coordinan según zona)</span>
           </div>
         </div>
@@ -629,7 +737,7 @@
           </p>
 
           <div class="decision-card-footer">
-            <span class="decision-card-price">Desde $35.000 <small style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">por video base</small></span>
+            <span class="decision-card-price">Desde ${formatARS(CFG.videos.modalidades.ediPubli.precioBase)} <small style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">por video base</small></span>
             <span style="font-size:0.82rem; font-weight:700; color:var(--success);">✅ Sin costos de traslado</span>
           </div>
         </div>
@@ -665,7 +773,7 @@
     return `
       <div class="step-header">
         <h1 class="step-question-title">¿Cuántos videos por mes querés que ${modeName}?</h1>
-        <p class="step-question-subtitle">A mayor cantidad mensual, mayor descuento: cada video adicional te sale más barato que el anterior (¡hasta 50% OFF a partir del 6°!).</p>
+        <p class="step-question-subtitle">A mayor cantidad mensual, mayor descuento: cada video adicional te sale más barato que el anterior (¡hasta ${getVideoUnitDiscountPct(6)}% OFF a partir del 6°!).</p>
       </div>
 
       <div class="qty-grid-compact">
@@ -675,7 +783,7 @@
       <div class="manual-stepper-box">
         <div>
           <div style="font-weight:900; font-size:1.05rem;">¿Querés más de 6 videos al mes?</div>
-          <div style="font-size:0.85rem; color:var(--text-muted);">Del 6° en adelante van todos al 50% OFF</div>
+          <div style="font-size:0.85rem; color:var(--text-muted);">Del 6° en adelante van todos al ${getVideoUnitDiscountPct(6)}% OFF</div>
         </div>
         <div class="stepper-controls">
           <button type="button" class="stepper-btn" data-action="adjust-v-qty" data-delta="-1">−</button>
@@ -716,7 +824,7 @@
           <div class="month-pill-card ${isSel ? "selected" : ""}" data-action="choose-v-months" data-months="3">
             <div class="month-pill-header">
               <span class="month-pill-title">3 Meses</span>
-              <span class="month-pill-badge">⭐ -20% OFF</span>
+              <span class="month-pill-badge">⭐ -${quote.monthDiscountPct}% OFF</span>
             </div>
             <div class="month-pill-hero-price">${formatARS(quote.effectivePerMonth)} <small>/ mes</small></div>
             <div class="month-pill-subdetail">Total: ${formatARS(quote.totalFinal)}<br/>(Ahorro ${formatARS(quote.totalSaved)})</div>
@@ -731,7 +839,7 @@
           <div class="month-pill-card ${isSel ? "selected" : ""}" data-action="choose-v-months" data-months="6">
             <div class="month-pill-header">
               <span class="month-pill-title">6 Meses</span>
-              <span class="month-pill-badge">🔥 -30% OFF</span>
+              <span class="month-pill-badge">🔥 -${quote.monthDiscountPct}% OFF</span>
             </div>
             <div class="month-pill-hero-price">${formatARS(quote.effectivePerMonth)} <small>/ mes</small></div>
             <div class="month-pill-subdetail">Total: ${formatARS(quote.totalFinal)}<br/>(Ahorro ${formatARS(quote.totalSaved)})</div>
@@ -749,7 +857,7 @@
           <div class="month-pill-card ${isSel ? "selected" : ""}" data-action="choose-v-months" data-months="9">
             <div class="month-pill-header">
               <span class="month-pill-title">9 Meses</span>
-              <span class="month-pill-badge" style="background:#fef3c7; color:#92400e;">🚀 -35% OFF</span>
+              <span class="month-pill-badge" style="background:#fef3c7; color:#92400e;">🚀 -${quote.monthDiscountPct}% OFF</span>
             </div>
             <div class="month-pill-hero-price">${formatARS(quote.effectivePerMonth)} <small>/ mes</small></div>
             <div class="month-pill-subdetail">Total: ${formatARS(quote.totalFinal)}<br/>(Ahorro ${formatARS(quote.totalSaved)})</div>
@@ -764,7 +872,7 @@
           <div class="month-pill-card ${isSel ? "selected" : ""}" data-action="choose-v-months" data-months="12">
             <div class="month-pill-header">
               <span class="month-pill-title">12 Meses</span>
-              <span class="month-pill-badge" style="background:#fef3c7; color:#92400e;">👑 -40% OFF</span>
+              <span class="month-pill-badge" style="background:#fef3c7; color:#92400e;">👑 -${quote.monthDiscountPct}% OFF</span>
             </div>
             <div class="month-pill-hero-price">${formatARS(quote.effectivePerMonth)} <small>/ mes</small></div>
             <div class="month-pill-subdetail">Total: ${formatARS(quote.totalFinal)}<br/>(Ahorro ${formatARS(quote.totalSaved)})</div>
@@ -832,7 +940,7 @@
 
             <div class="decision-card-footer">
               <span class="decision-card-price">${formatARS(plan.precioMensual)} <small style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">/ mes base</small></span>
-              <span style="font-size:0.85rem; font-weight:800; color:var(--success);">Hasta 40% OFF congelando</span>
+              <span style="font-size:0.85rem; font-weight:800; color:var(--success);">Hasta ${getMonthDiscountPct(12)}% OFF congelando</span>
             </div>
           </div>
         `;
@@ -893,7 +1001,7 @@
           <div class="month-pill-card ${isSel ? "selected" : ""}" data-action="choose-cm-months" data-months="3">
             <div class="month-pill-header">
               <span class="month-pill-title">3 Meses</span>
-              <span class="month-pill-badge">⭐ -20% OFF</span>
+              <span class="month-pill-badge">⭐ -${quote.monthDiscountPct}% OFF</span>
             </div>
             <div class="month-pill-hero-price">${formatARS(quote.effectivePerMonth)} <small>/ mes</small></div>
             <div class="month-pill-subdetail">Total: ${formatARS(quote.totalFinal)}<br/>(Ahorro ${formatARS(quote.totalSaved)})</div>
@@ -908,7 +1016,7 @@
           <div class="month-pill-card ${isSel ? "selected" : ""}" data-action="choose-cm-months" data-months="6">
             <div class="month-pill-header">
               <span class="month-pill-title">6 Meses</span>
-              <span class="month-pill-badge">🔥 -30% OFF</span>
+              <span class="month-pill-badge">🔥 -${quote.monthDiscountPct}% OFF</span>
             </div>
             <div class="month-pill-hero-price">${formatARS(quote.effectivePerMonth)} <small>/ mes</small></div>
             <div class="month-pill-subdetail">Total: ${formatARS(quote.totalFinal)}<br/>(Ahorro ${formatARS(quote.totalSaved)})</div>
@@ -926,7 +1034,7 @@
           <div class="month-pill-card ${isSel ? "selected" : ""}" data-action="choose-cm-months" data-months="9">
             <div class="month-pill-header">
               <span class="month-pill-title">9 Meses</span>
-              <span class="month-pill-badge" style="background:#fef3c7; color:#92400e;">🚀 -35% OFF</span>
+              <span class="month-pill-badge" style="background:#fef3c7; color:#92400e;">🚀 -${quote.monthDiscountPct}% OFF</span>
             </div>
             <div class="month-pill-hero-price">${formatARS(quote.effectivePerMonth)} <small>/ mes</small></div>
             <div class="month-pill-subdetail">Total: ${formatARS(quote.totalFinal)}<br/>(Ahorro ${formatARS(quote.totalSaved)})</div>
@@ -941,7 +1049,7 @@
           <div class="month-pill-card ${isSel ? "selected" : ""}" data-action="choose-cm-months" data-months="12">
             <div class="month-pill-header">
               <span class="month-pill-title">12 Meses</span>
-              <span class="month-pill-badge" style="background:#fef3c7; color:#92400e;">👑 -40% OFF</span>
+              <span class="month-pill-badge" style="background:#fef3c7; color:#92400e;">👑 -${quote.monthDiscountPct}% OFF</span>
             </div>
             <div class="month-pill-hero-price">${formatARS(quote.effectivePerMonth)} <small>/ mes</small></div>
             <div class="month-pill-subdetail">Total: ${formatARS(quote.totalFinal)}<br/>(Ahorro ${formatARS(quote.totalSaved)})</div>
@@ -984,6 +1092,15 @@
 
   // Paso TO: Catálogo / Tienda
   function renderStep_TOChoice() {
+    const wspObj = CFG.tienda?.opciones?.find((o) => o.id === "catalogoWsp");
+    const nubeObj = CFG.tienda?.opciones?.find((o) => o.id === "tiendaNube");
+    const wspPrice = wspObj ? wspObj.precioUnico : 50000;
+    const nubePrice = nubeObj ? nubeObj.precioUnico : 50000;
+    const ambosPrice =
+      CFG.tienda?.precioAmbos !== undefined
+        ? CFG.tienda.precioAmbos
+        : wspPrice + nubePrice;
+
     return `
       <div class="step-header">
         <h1 class="step-question-title">¿Querés sumar tu Catálogo Digital o Tienda Online?</h1>
@@ -1001,7 +1118,7 @@
             Fotografía de hasta 30 productos en tu local o predio + armado completo del catálogo dentro de tu WhatsApp Business con precios y descripciones vendedoras.
           </p>
           <div class="decision-card-footer">
-            <span class="decision-card-price">$50.000 <small style="font-size:0.85rem; color:var(--text-muted);">(pago único)</small></span>
+            <span class="decision-card-price">${formatARS(wspPrice)} <small style="font-size:0.85rem; color:var(--text-muted);">(pago único)</small></span>
             <span class="decision-card-notice">⚠️ Traslado se coordina aparte según zona</span>
           </div>
         </div>
@@ -1016,7 +1133,7 @@
             Configuración completa de tu propia página web de ventas, conexión de medios de pago (Mercado Pago), medios de envío y carga de hasta 30 productos.
           </p>
           <div class="decision-card-footer">
-            <span class="decision-card-price">$50.000 <small style="font-size:0.85rem; color:var(--text-muted);">(pago único)</small></span>
+            <span class="decision-card-price">${formatARS(nubePrice)} <small style="font-size:0.85rem; color:var(--text-muted);">(pago único)</small></span>
             <span class="decision-card-notice">⚠️ Traslado se coordina aparte según zona</span>
           </div>
         </div>
@@ -1029,7 +1146,7 @@
           </div>
           <p class="decision-card-desc">Tu catálogo adentro de WhatsApp para vender por chat + tu página web con carrito para cobrar con tarjeta.</p>
           <div class="decision-card-footer">
-            <span class="decision-card-price">$100.000 <small style="font-size:0.85rem; color:var(--text-muted);">(pago único)</small></span>
+            <span class="decision-card-price">${formatARS(ambosPrice)} <small style="font-size:0.85rem; color:var(--text-muted);">(pago único)</small></span>
           </div>
         </div>
 
@@ -1051,12 +1168,15 @@
       ? state.enabledModules.ref
       : state.selectedServices.ref;
 
+    const inuDisc = CFG.inucorn?.descuentoPct || 10;
+    const refDisc = CFG.referidos?.descuentoPct || 25;
+
     let inuHTML = "";
     if (wantsINU) {
       const inu = CFG.inucorn;
       inuHTML = `
         <div class="inucorn-step-card">
-          <div style="font-size:1.1rem; font-weight:800; color:#5b21b6;">🎁 10% OFF en Imprenta Inucorn</div>
+          <div style="font-size:1.1rem; font-weight:800; color:#5b21b6;">🎁 ${inuDisc}% OFF en Imprenta Inucorn</div>
           <p style="font-size:0.88rem; color:#6b21a8; line-height:1.4;">${inu.descripcion}</p>
           <div class="inucorn-coupon-box">${inu.codigoCupon}</div>
 
@@ -1077,7 +1197,7 @@
     if (wantsREF) {
       refHTML = `
         <div class="referral-step-card">
-          <div style="font-size:1.15rem; font-weight:900; color:#92400e;">🤝 Programa de Referidos<br/>(25% OFF)</div>
+          <div style="font-size:1.15rem; font-weight:900; color:#92400e;">🤝 Programa de Referidos<br/>(${refDisc}% OFF)</div>
           <p style="font-size:0.88rem; color:#b45309; line-height:1.4;">
             Descuento válido al cancelar el saldo, bajo condición de seña previa del referido.
             <br/>
@@ -1121,9 +1241,9 @@
 
     let titleText = "🎁 ¡Tus Beneficios y Descuentos!";
     if (wantsINU && !wantsREF) {
-      titleText = "🎁 ¡Tenés 10% OFF en Imprenta Inucorn!";
+      titleText = `🎁 ¡Tenés ${inuDisc}% OFF en Imprenta Inucorn!`;
     } else if (wantsREF && !wantsINU) {
-      titleText = "🤝 ¡25% OFF con Código de Referido!";
+      titleText = `🤝 ¡${refDisc}% OFF con Código de Referido!`;
     }
 
     return `
@@ -1216,7 +1336,7 @@
       items.push(`
         <div class="final-summary-item" style="border-left: 3px solid var(--inucorn-purple); padding-left: 10px;">
           <div>
-            <div class="final-item-title inucorn-text-title">🎁 Beneficio Imprenta Inucorn (10% OFF)</div>
+            <div class="final-item-title inucorn-text-title">🎁 Beneficio Imprenta Inucorn (${CFG.inucorn?.descuentoPct || 10}% OFF)</div>
             <div class="final-item-desc">Descuento reservado para coordinar con Fran (Código: <strong>${CFG.inucorn.codigoCupon}</strong>)</div>
           </div>
           <div class="final-item-price" style="color:var(--inucorn-purple); font-size:1rem;">
@@ -1241,7 +1361,7 @@
       items.push(`
         <div class="final-summary-item" style="border-left: 3px solid #f59e0b; padding-left: 10px;">
           <div>
-            <div class="final-item-title" style="color:#b45309;">🤝 Descuento por Referidos (25% OFF)</div>
+            <div class="final-item-title" style="color:#b45309;">🤝 Descuento por Referidos (${CFG.referidos?.descuentoPct || 25}% OFF)</div>
             <div class="final-item-desc">${details.join(" • ")} (a aplicar al cancelar el saldo)</div>
           </div>
           <div class="final-item-price" style="color:#d97706; font-size:1rem;">
@@ -1576,6 +1696,27 @@
           break;
         }
 
+        case "switch-admin-tab": {
+          const tab = target.getAttribute("data-tab");
+          if (tab) switchAdminTab(tab);
+          break;
+        }
+
+        case "save-admin-prices": {
+          saveAdminPrices();
+          break;
+        }
+
+        case "reset-admin-prices": {
+          resetAdminPrices();
+          break;
+        }
+
+        case "copy-admin-config": {
+          copyAdminConfigToClipboard();
+          break;
+        }
+
         case "verify-admin-pin": {
           verifyAdminPin();
           break;
@@ -1703,10 +1844,302 @@
       errorEl.style.display = "none";
       document.getElementById("admin-login-view").style.display = "none";
       document.getElementById("admin-panel-view").style.display = "block";
+      populateAdminPriceInputs();
       updateAdminGeneratedUrl();
     } else {
       errorEl.style.display = "block";
       errorEl.textContent = "Contraseña incorrecta.";
+    }
+  }
+
+  function switchAdminTab(tab) {
+    document.querySelectorAll(".admin-tab-btn").forEach((btn) => {
+      btn.classList.toggle("active", btn.getAttribute("data-tab") === tab);
+    });
+    const pricesView = document.getElementById("admin-tab-prices");
+    const linksView = document.getElementById("admin-tab-links");
+    if (pricesView)
+      pricesView.style.display = tab === "prices" ? "block" : "none";
+    if (linksView)
+      linksView.style.display = tab === "links" ? "block" : "none";
+  }
+
+  function populateAdminPriceInputs() {
+    // Videos
+    const vGrabo = document.getElementById("adm-price-v-grabo");
+    if (vGrabo && CFG.videos?.modalidades?.graboEdiPubli) {
+      vGrabo.value = CFG.videos.modalidades.graboEdiPubli.precioBase;
+    }
+
+    const vEdi = document.getElementById("adm-price-v-edi");
+    if (vEdi && CFG.videos?.modalidades?.ediPubli) {
+      vEdi.value = CFG.videos.modalidades.ediPubli.precioBase;
+    }
+
+    // CM
+    const cmPres = document.getElementById("adm-price-cm-presencia");
+    if (cmPres) {
+      cmPres.value =
+        CFG.cm?.planes?.find((p) => p.id === "presencia")?.precioMensual ||
+        180000;
+    }
+
+    const cmCrec = document.getElementById("adm-price-cm-crecimiento");
+    if (cmCrec) {
+      cmCrec.value =
+        CFG.cm?.planes?.find((p) => p.id === "crecimiento")?.precioMensual ||
+        280000;
+    }
+
+    const cmTot = document.getElementById("adm-price-cm-total");
+    if (cmTot) {
+      cmTot.value =
+        CFG.cm?.planes?.find((p) => p.id === "total")?.precioMensual || 400000;
+    }
+
+    // Tienda
+    const toWsp = document.getElementById("adm-price-to-wsp");
+    if (toWsp) {
+      toWsp.value =
+        CFG.tienda?.opciones?.find((o) => o.id === "catalogoWsp")
+          ?.precioUnico || 50000;
+    }
+
+    const toNube = document.getElementById("adm-price-to-nube");
+    if (toNube) {
+      toNube.value =
+        CFG.tienda?.opciones?.find((o) => o.id === "tiendaNube")?.precioUnico ||
+        50000;
+    }
+
+    const toAmbos = document.getElementById("adm-price-to-ambos");
+    if (toAmbos) {
+      toAmbos.value =
+        CFG.tienda?.precioAmbos !== undefined ? CFG.tienda.precioAmbos : 100000;
+    }
+
+    // Meses
+    const m2 = document.getElementById("adm-disc-m-2");
+    if (m2) m2.value = getMonthDiscountPct(2);
+
+    const m3 = document.getElementById("adm-disc-m-3");
+    if (m3) m3.value = getMonthDiscountPct(3);
+
+    const m6 = document.getElementById("adm-disc-m-6");
+    if (m6) m6.value = getMonthDiscountPct(6);
+
+    const m9 = document.getElementById("adm-disc-m-9");
+    if (m9) m9.value = getMonthDiscountPct(9);
+
+    const m12 = document.getElementById("adm-disc-m-12");
+    if (m12) m12.value = getMonthDiscountPct(12);
+
+    // Videos Vol
+    const v2 = document.getElementById("adm-disc-v-2");
+    if (v2) v2.value = getVideoUnitDiscountPct(2);
+
+    const v3 = document.getElementById("adm-disc-v-3");
+    if (v3) v3.value = getVideoUnitDiscountPct(3);
+
+    const v4 = document.getElementById("adm-disc-v-4");
+    if (v4) v4.value = getVideoUnitDiscountPct(4);
+
+    const v5 = document.getElementById("adm-disc-v-5");
+    if (v5) v5.value = getVideoUnitDiscountPct(5);
+
+    const v6 = document.getElementById("adm-disc-v-6");
+    if (v6) v6.value = getVideoUnitDiscountPct(6);
+
+    // Alianzas
+    const inu = document.getElementById("adm-disc-inu");
+    if (inu) inu.value = CFG.inucorn?.descuentoPct || 10;
+
+    const ref = document.getElementById("adm-disc-ref");
+    if (ref) ref.value = CFG.referidos?.descuentoPct || 25;
+  }
+
+  function saveAdminPrices() {
+    const customConfig = {
+      videos: {
+        graboEdiPubli:
+          parseInt(
+            document.getElementById("adm-price-v-grabo")?.value,
+            10
+          ) || 50000,
+        ediPubli:
+          parseInt(document.getElementById("adm-price-v-edi")?.value, 10) ||
+          35000,
+        descuentos: {
+          2:
+            parseInt(document.getElementById("adm-disc-v-2")?.value, 10) || 10,
+          3:
+            parseInt(document.getElementById("adm-disc-v-3")?.value, 10) || 20,
+          4:
+            parseInt(document.getElementById("adm-disc-v-4")?.value, 10) || 30,
+          5:
+            parseInt(document.getElementById("adm-disc-v-5")?.value, 10) || 40,
+          6:
+            parseInt(document.getElementById("adm-disc-v-6")?.value, 10) || 50,
+        },
+      },
+      cm: {
+        presencia:
+          parseInt(
+            document.getElementById("adm-price-cm-presencia")?.value,
+            10
+          ) || 180000,
+        crecimiento:
+          parseInt(
+            document.getElementById("adm-price-cm-crecimiento")?.value,
+            10
+          ) || 280000,
+        total:
+          parseInt(
+            document.getElementById("adm-price-cm-total")?.value,
+            10
+          ) || 400000,
+      },
+      tienda: {
+        catalogoWsp:
+          parseInt(
+            document.getElementById("adm-price-to-wsp")?.value,
+            10
+          ) || 50000,
+        tiendaNube:
+          parseInt(
+            document.getElementById("adm-price-to-nube")?.value,
+            10
+          ) || 50000,
+        ambos:
+          parseInt(
+            document.getElementById("adm-price-to-ambos")?.value,
+            10
+          ) || 100000,
+      },
+      meses: {
+        2: parseInt(document.getElementById("adm-disc-m-2")?.value, 10) || 10,
+        3: parseInt(document.getElementById("adm-disc-m-3")?.value, 10) || 20,
+        6: parseInt(document.getElementById("adm-disc-m-6")?.value, 10) || 30,
+        9: parseInt(document.getElementById("adm-disc-m-9")?.value, 10) || 35,
+        12:
+          parseInt(document.getElementById("adm-disc-m-12")?.value, 10) || 40,
+      },
+      inucorn: {
+        descuentoPct:
+          parseInt(document.getElementById("adm-disc-inu")?.value, 10) || 10,
+      },
+      referidos: {
+        descuentoPct:
+          parseInt(document.getElementById("adm-disc-ref")?.value, 10) || 25,
+      },
+    };
+
+    localStorage.setItem("FEA_CUSTOM_CONFIG", JSON.stringify(customConfig));
+    applyConfigOverrides(customConfig);
+
+    const statusEl = document.getElementById("admin-prices-status");
+    if (statusEl) {
+      statusEl.className = "admin-status-message success";
+      statusEl.textContent =
+        "✅ ¡Precios y descuentos guardados y aplicados con éxito en todo el cotizador!";
+      statusEl.style.display = "block";
+      setTimeout(() => {
+        statusEl.style.display = "none";
+      }, 3500);
+    }
+
+    renderCurrentStep();
+  }
+
+  function resetAdminPrices() {
+    if (
+      !confirm(
+        "¿Seguro que querés restablecer todos los precios y descuentos a los valores originales de fábrica?"
+      )
+    ) {
+      return;
+    }
+    localStorage.removeItem("FEA_CUSTOM_CONFIG");
+
+    applyConfigOverrides({
+      videos: {
+        graboEdiPubli:
+          DEFAULT_CFG.videos.modalidades.graboEdiPubli.precioBase,
+        ediPubli: DEFAULT_CFG.videos.modalidades.ediPubli.precioBase,
+        descuentos: { 2: 10, 3: 20, 4: 30, 5: 40, 6: 50 },
+      },
+      cm: {
+        presencia: DEFAULT_CFG.cm.planes[0].precioMensual,
+        crecimiento: DEFAULT_CFG.cm.planes[1].precioMensual,
+        total: DEFAULT_CFG.cm.planes[2].precioMensual,
+      },
+      tienda: {
+        catalogoWsp: DEFAULT_CFG.tienda.opciones[0].precioUnico,
+        tiendaNube: DEFAULT_CFG.tienda.opciones[1].precioUnico,
+        ambos: DEFAULT_CFG.tienda.precioAmbos || 100000,
+      },
+      meses: { 2: 10, 3: 20, 6: 30, 9: 35, 12: 40 },
+      inucorn: { descuentoPct: DEFAULT_CFG.inucorn.descuentoPct },
+      referidos: {
+        descuentoPct: DEFAULT_CFG.referidos
+          ? DEFAULT_CFG.referidos.descuentoPct
+          : 25,
+      },
+    });
+
+    populateAdminPriceInputs();
+
+    const statusEl = document.getElementById("admin-prices-status");
+    if (statusEl) {
+      statusEl.className = "admin-status-message info";
+      statusEl.textContent = "🔄 Valores restablecidos a los de fábrica.";
+      statusEl.style.display = "block";
+      setTimeout(() => {
+        statusEl.style.display = "none";
+      }, 3500);
+    }
+
+    renderCurrentStep();
+  }
+
+  function copyAdminConfigToClipboard() {
+    const codeSnippet = `// Valores actualizados para config.js:
+videos: {
+  modalidades: {
+    graboEdiPubli: { precioBase: ${CFG.videos.modalidades.graboEdiPubli.precioBase} },
+    ediPubli: { precioBase: ${CFG.videos.modalidades.ediPubli.precioBase} }
+  },
+  descuentoPorUnidad: ${JSON.stringify(CFG.videos.descuentoPorUnidad, null, 4)}
+},
+cm: {
+  planes: [
+    { id: "presencia", precioMensual: ${CFG.cm.planes.find((p) => p.id === "presencia")?.precioMensual} },
+    { id: "crecimiento", precioMensual: ${CFG.cm.planes.find((p) => p.id === "crecimiento")?.precioMensual} },
+    { id: "total", precioMensual: ${CFG.cm.planes.find((p) => p.id === "total")?.precioMensual} }
+  ]
+},
+tienda: {
+  precioAmbos: ${CFG.tienda.precioAmbos},
+  opciones: [
+    { id: "catalogoWsp", precioUnico: ${CFG.tienda.opciones.find((o) => o.id === "catalogoWsp")?.precioUnico} },
+    { id: "tiendaNube", precioUnico: ${CFG.tienda.opciones.find((o) => o.id === "tiendaNube")?.precioUnico} }
+  ]
+},
+mesesOpciones: ${JSON.stringify(CFG.mesesOpciones.map((m) => ({ meses: m.meses, descuentoPct: m.descuentoPct })), null, 4)},
+inucorn: { descuentoPct: ${CFG.inucorn.descuentoPct} },
+referidos: { descuentoPct: ${CFG.referidos?.descuentoPct || 25} }
+`;
+
+    navigator.clipboard.writeText(codeSnippet);
+    const statusEl = document.getElementById("admin-prices-status");
+    if (statusEl) {
+      statusEl.className = "admin-status-message info";
+      statusEl.textContent =
+        "📋 ¡Código copiado al portapapeles! Listo para pegar en config.js.";
+      statusEl.style.display = "block";
+      setTimeout(() => {
+        statusEl.style.display = "none";
+      }, 3500);
     }
   }
 
@@ -1745,6 +2178,7 @@
 
   // Inicialización
   document.addEventListener("DOMContentLoaded", () => {
+    loadPersistedConfig();
     parseUrlParameters();
     setupEventListeners();
     renderCurrentStep();

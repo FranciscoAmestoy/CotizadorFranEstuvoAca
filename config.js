@@ -248,6 +248,7 @@ window.COTIZADOR_CONFIG = {
     tituloSeccion: "Catálogo Digital / Tienda Online (Pago Único)",
     enCriolloGeneral:
       "Un catálogo digital es un mostrador abierto las 24 hs: mandás un solo link y el cliente ve fotos, características y precios listos para encargarte.",
+    precioAmbos: 100000,
     opciones: [
       {
         id: "catalogoWsp",
@@ -295,5 +296,12 @@ window.COTIZADOR_CONFIG = {
     titulo: "🎁 Beneficio Exclusivo: 10% OFF en Imprenta Inucorn",
     descripcion:
       "Contratando cualquiera de mis servicios, tenés un 10% de descuento en servicios de imprenta (folletos, tarjetas personales, stickers, cartelería y gráfica para tu negocio) mencionando el código FRANESTUVOACA.",
+  },
+
+  // --------------------------------------------------------------------------
+  // 6. PROGRAMA DE REFERIDOS (Parámetro URL: ref)
+  // --------------------------------------------------------------------------
+  referidos: {
+    descuentoPct: 25,
   },
 };

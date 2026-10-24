@@ -81,14 +81,14 @@
   <div id="admin-modal" class="modal-overlay hidden">
     <div class="modal-card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <h3 style="font-size:1.3rem; font-weight:900;">🔒 Mantenimiento (Armador de Links)</h3>
+        <h3 style="font-size:1.3rem; font-weight:900;">🔒 Mantenimiento y Configuración</h3>
         <button type="button" class="btn-secondary" style="padding:6px 12px;" data-action="close-admin">✕ Cerrar</button>
       </div>
 
       <!-- VISTA 1: LOGIN CON CLAVE -->
       <div id="admin-login-view">
         <p style="color:var(--text-secondary); margin-bottom:12px;">
-          Ingresá la clave de mantenimiento para abrir el generador de links personalizados.
+          Ingresá la clave de mantenimiento para gestionar precios, descuentos y generar links.
         </p>
         <div class="form-group">
           <label for="admin-pin-input">Contraseña</label>
@@ -100,70 +100,314 @@
         </button>
       </div>
 
-      <!-- VISTA 2: GENERADOR DE LINKS PERSONALIZADOS -->
+      <!-- VISTA 2: PANEL DE ADMINISTRACIÓN REWORKEADO -->
       <div id="admin-panel-view" style="display: none;">
-        <div class="form-group">
-          <label>1. ¿Qué módulos querés habilitar en el recorrido de este cliente?</label>
-          <div class="checkbox-row">
-            <label class="checkbox-pill">
-              <input type="checkbox" id="adm-chk-v" checked />
-              <span>v (Videos)</span>
-            </label>
-            <label class="checkbox-pill">
-              <input type="checkbox" id="adm-chk-cm" checked />
-              <span>cm (Community Manager)</span>
-            </label>
-            <label class="checkbox-pill">
-              <input type="checkbox" id="adm-chk-to" checked />
-              <span>to (Tienda / Catálogo)</span>
-            </label>
-            <label class="checkbox-pill" style="border-color:var(--inucorn-purple); color:var(--inucorn-purple);">
-              <input type="checkbox" id="adm-chk-inu" />
-              <span>inu (10% OFF Inucorn)</span>
-            </label>
-            <label class="checkbox-pill" style="border-color:#f59e0b; color:#b45309;">
-              <input type="checkbox" id="adm-chk-ref" />
-              <span>ref (25% OFF Referidos)</span>
-            </label>
+        <!-- Pestañas de Navegación -->
+        <div class="admin-tabs">
+          <button type="button" class="admin-tab-btn active" data-action="switch-admin-tab" data-tab="prices">
+            💰 Precios y Descuentos
+          </button>
+          <button type="button" class="admin-tab-btn" data-action="switch-admin-tab" data-tab="links">
+            🔗 Armador de Links
+          </button>
+        </div>
+
+        <!-- TAB 1: PRECIOS Y DESCUENTOS -->
+        <div id="admin-tab-prices" class="admin-tab-content">
+          <div class="admin-info-note">
+            💡 Modificá los precios base y descuentos. Al guardar, se actualiza el cotizador al instante y se conservan los valores en este dispositivo.
+          </div>
+
+          <!-- SECCIÓN: VIDEOS -->
+          <div class="admin-card-section">
+            <h4 class="admin-section-title">🎬 Precios Base de Videos</h4>
+            <div class="admin-grid-2col">
+              <div class="form-group">
+                <label for="adm-price-v-grabo">Fran va, graba, edita y publica</label>
+                <div class="admin-input-group">
+                  <span class="admin-input-prefix">$</span>
+                  <input type="number" id="adm-price-v-grabo" class="form-input admin-number-input" step="1000" min="0" />
+                </div>
+                <small class="admin-input-hint">Por video base (default: $50.000)</small>
+              </div>
+
+              <div class="form-group">
+                <label for="adm-price-v-edi">Cliente aporta videos, Fran edita</label>
+                <div class="admin-input-group">
+                  <span class="admin-input-prefix">$</span>
+                  <input type="number" id="adm-price-v-edi" class="form-input admin-number-input" step="1000" min="0" />
+                </div>
+                <small class="admin-input-hint">Por video base (default: $35.000)</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN: COMMUNITY MANAGER -->
+          <div class="admin-card-section">
+            <h4 class="admin-section-title">📱 Precios Mensuales de Redes (CM)</h4>
+            <div class="admin-grid-3col">
+              <div class="form-group">
+                <label for="adm-price-cm-presencia">Plan Presencia</label>
+                <div class="admin-input-group">
+                  <span class="admin-input-prefix">$</span>
+                  <input type="number" id="adm-price-cm-presencia" class="form-input admin-number-input" step="5000" min="0" />
+                </div>
+                <small class="admin-input-hint">Por mes (default: $180.000)</small>
+              </div>
+
+              <div class="form-group">
+                <label for="adm-price-cm-crecimiento">Plan Crecimiento</label>
+                <div class="admin-input-group">
+                  <span class="admin-input-prefix">$</span>
+                  <input type="number" id="adm-price-cm-crecimiento" class="form-input admin-number-input" step="5000" min="0" />
+                </div>
+                <small class="admin-input-hint">Por mes (default: $280.000)</small>
+              </div>
+
+              <div class="form-group">
+                <label for="adm-price-cm-total">Plan Total</label>
+                <div class="admin-input-group">
+                  <span class="admin-input-prefix">$</span>
+                  <input type="number" id="adm-price-cm-total" class="form-input admin-number-input" step="5000" min="0" />
+                </div>
+                <small class="admin-input-hint">Por mes (default: $400.000)</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN: TIENDA / CATÁLOGO -->
+          <div class="admin-card-section">
+            <h4 class="admin-section-title">🛒 Tienda Online y Catálogo Digital</h4>
+            <div class="admin-grid-3col">
+              <div class="form-group">
+                <label for="adm-price-to-wsp">Catálogo WhatsApp</label>
+                <div class="admin-input-group">
+                  <span class="admin-input-prefix">$</span>
+                  <input type="number" id="adm-price-to-wsp" class="form-input admin-number-input" step="5000" min="0" />
+                </div>
+                <small class="admin-input-hint">Pago único (default: $50.000)</small>
+              </div>
+
+              <div class="form-group">
+                <label for="adm-price-to-nube">Tienda Nube / Empretienda</label>
+                <div class="admin-input-group">
+                  <span class="admin-input-prefix">$</span>
+                  <input type="number" id="adm-price-to-nube" class="form-input admin-number-input" step="5000" min="0" />
+                </div>
+                <small class="admin-input-hint">Pago único (default: $50.000)</small>
+              </div>
+
+              <div class="form-group">
+                <label for="adm-price-to-ambos">Combo Ambos Servicios</label>
+                <div class="admin-input-group">
+                  <span class="admin-input-prefix">$</span>
+                  <input type="number" id="adm-price-to-ambos" class="form-input admin-number-input" step="5000" min="0" />
+                </div>
+                <small class="admin-input-hint">Pago único (default: $100.000)</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN: DESCUENTOS POR MESES ADELANTADOS -->
+          <div class="admin-card-section">
+            <h4 class="admin-section-title">📅 Descuentos por Meses Adelantados (% OFF)</h4>
+            <div class="admin-grid-5col">
+              <div class="form-group">
+                <label for="adm-disc-m-2">2 Meses</label>
+                <div class="admin-input-group">
+                  <input type="number" id="adm-disc-m-2" class="form-input admin-number-input" min="0" max="100" />
+                  <span class="admin-input-suffix">%</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="adm-disc-m-3">3 Meses</label>
+                <div class="admin-input-group">
+                  <input type="number" id="adm-disc-m-3" class="form-input admin-number-input" min="0" max="100" />
+                  <span class="admin-input-suffix">%</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="adm-disc-m-6">6 Meses</label>
+                <div class="admin-input-group">
+                  <input type="number" id="adm-disc-m-6" class="form-input admin-number-input" min="0" max="100" />
+                  <span class="admin-input-suffix">%</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="adm-disc-m-9">9 Meses</label>
+                <div class="admin-input-group">
+                  <input type="number" id="adm-disc-m-9" class="form-input admin-number-input" min="0" max="100" />
+                  <span class="admin-input-suffix">%</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="adm-disc-m-12">12 Meses</label>
+                <div class="admin-input-group">
+                  <input type="number" id="adm-disc-m-12" class="form-input admin-number-input" min="0" max="100" />
+                  <span class="admin-input-suffix">%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN: DESCUENTOS POR VOLUMEN DE VIDEOS -->
+          <div class="admin-card-section">
+            <h4 class="admin-section-title">🎞️ Descuento Escalonado por Videos / Mes (% OFF)</h4>
+            <div class="admin-grid-5col">
+              <div class="form-group">
+                <label for="adm-disc-v-2">2° video</label>
+                <div class="admin-input-group">
+                  <input type="number" id="adm-disc-v-2" class="form-input admin-number-input" min="0" max="100" />
+                  <span class="admin-input-suffix">%</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="adm-disc-v-3">3° video</label>
+                <div class="admin-input-group">
+                  <input type="number" id="adm-disc-v-3" class="form-input admin-number-input" min="0" max="100" />
+                  <span class="admin-input-suffix">%</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="adm-disc-v-4">4° video</label>
+                <div class="admin-input-group">
+                  <input type="number" id="adm-disc-v-4" class="form-input admin-number-input" min="0" max="100" />
+                  <span class="admin-input-suffix">%</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="adm-disc-v-5">5° video</label>
+                <div class="admin-input-group">
+                  <input type="number" id="adm-disc-v-5" class="form-input admin-number-input" min="0" max="100" />
+                  <span class="admin-input-suffix">%</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="adm-disc-v-6">6° o más</label>
+                <div class="admin-input-group">
+                  <input type="number" id="adm-disc-v-6" class="form-input admin-number-input" min="0" max="100" />
+                  <span class="admin-input-suffix">%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN: ALIANZAS Y BENEFICIOS -->
+          <div class="admin-card-section">
+            <h4 class="admin-section-title">🎁 Alianzas y Beneficios (% OFF)</h4>
+            <div class="admin-grid-2col">
+              <div class="form-group">
+                <label for="adm-disc-inu">Imprenta Inucorn</label>
+                <div class="admin-input-group">
+                  <input type="number" id="adm-disc-inu" class="form-input admin-number-input" min="0" max="100" />
+                  <span class="admin-input-suffix">%</span>
+                </div>
+                <small class="admin-input-hint">Cupón descuento (default: 10%)</small>
+              </div>
+
+              <div class="form-group">
+                <label for="adm-disc-ref">Programa de Referidos</label>
+                <div class="admin-input-group">
+                  <input type="number" id="adm-disc-ref" class="form-input admin-number-input" min="0" max="100" />
+                  <span class="admin-input-suffix">%</span>
+                </div>
+                <small class="admin-input-hint">Descuento de referido (default: 25%)</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feedback de estado -->
+          <div id="admin-prices-status" class="admin-status-message" style="display:none;"></div>
+
+          <!-- Botones de Acción -->
+          <div class="admin-actions-bar">
+            <button type="button" class="btn-primary" style="flex:1; justify-content:center;" data-action="save-admin-prices">
+              💾 Guardar y Aplicar Cambios
+            </button>
+            <button type="button" class="btn-secondary" data-action="reset-admin-prices">
+              🔄 Restablecer Fábrica
+            </button>
+            <button type="button" class="btn-secondary" data-action="copy-admin-config">
+              📋 Copiar para config.js
+            </button>
           </div>
         </div>
 
-        <div class="form-group">
-          <label for="adm-client-name">2. Nombre de la Persona (Para el saludo y WhatsApp)</label>
-          <input type="text" id="adm-client-name" class="form-input" placeholder="Ej: Marcos" />
-        </div>
+        <!-- TAB 2: GENERADOR DE LINKS PERSONALIZADOS -->
+        <div id="admin-tab-links" class="admin-tab-content" style="display:none;">
+          <div class="form-group">
+            <label>1. ¿Qué módulos querés habilitar en el recorrido de este cliente?</label>
+            <div class="checkbox-row">
+              <label class="checkbox-pill">
+                <input type="checkbox" id="adm-chk-v" checked />
+                <span>v (Videos)</span>
+              </label>
+              <label class="checkbox-pill">
+                <input type="checkbox" id="adm-chk-cm" checked />
+                <span>cm (Community Manager)</span>
+              </label>
+              <label class="checkbox-pill">
+                <input type="checkbox" id="adm-chk-to" checked />
+                <span>to (Tienda / Catálogo)</span>
+              </label>
+              <label class="checkbox-pill" style="border-color:var(--inucorn-purple); color:var(--inucorn-purple);">
+                <input type="checkbox" id="adm-chk-inu" />
+                <span>inu (10% OFF Inucorn)</span>
+              </label>
+              <label class="checkbox-pill" style="border-color:#f59e0b; color:#b45309;">
+                <input type="checkbox" id="adm-chk-ref" />
+                <span>ref (25% OFF Referidos)</span>
+              </label>
+            </div>
+          </div>
 
-        <div class="form-group">
-          <label for="adm-business-name">3. Nombre del Negocio o Emprendimiento (Opcional)</label>
-          <input type="text" id="adm-business-name" class="form-input" placeholder="Ej: Conte-GEN" />
-        </div>
+          <div class="form-group">
+            <label for="adm-client-name">2. Nombre de la Persona (Para el saludo y WhatsApp)</label>
+            <input type="text" id="adm-client-name" class="form-input" placeholder="Ej: Marcos" />
+          </div>
 
-        <div class="form-group">
-          <label for="adm-client-note">4. Nota o explicación personalizada arriba de todo (Opcional)</label>
-          <input type="text" id="adm-client-note" class="form-input" placeholder="Ej: Pensado para mostrar los contenedores en stock y generar consultas" />
-        </div>
+          <div class="form-group">
+            <label for="adm-business-name">3. Nombre del Negocio o Emprendimiento (Opcional)</label>
+            <input type="text" id="adm-business-name" class="form-input" placeholder="Ej: Conte-GEN" />
+          </div>
 
-        <div class="form-group">
-          <label for="adm-uber-cost">5. Costo de 1 viaje de Uber (Solo ida) hasta el cliente (Opcional)</label>
-          <input type="number" id="adm-uber-cost" class="form-input" placeholder="Dejar vacío o ej: 4500" />
-          <small style="color:var(--text-muted); display:block; margin-top:4px;">
-            Si ponés un monto (ej. 4500), el cotizador muestra el valor ida y vuelta ($9.000 por visita). Si lo dejás vacío, dice "Traslado según zona a coordinar".
-          </small>
-        </div>
+          <div class="form-group">
+            <label for="adm-client-note">4. Nota o explicación personalizada arriba de todo (Opcional)</label>
+            <input type="text" id="adm-client-note" class="form-input" placeholder="Ej: Pensado para mostrar los contenedores en stock y generar consultas" />
+          </div>
 
-        <div class="form-group">
-          <label>Link generado listo para pasarle al cliente:</label>
-          <div id="adm-generated-url" class="generated-url-box"></div>
-          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
-            <button type="button" class="btn-primary" style="flex:1; justify-content:center;" data-action="copy-admin-url">
-              📋 Copiar Link para el Cliente
-            </button>
-            <button type="button" class="btn-secondary" data-action="test-admin-url">
-              👁️ Abrir y probar este Link
-            </button>
+          <div class="form-group">
+            <label for="adm-uber-cost">5. Costo de 1 viaje de Uber (Solo ida) hasta el cliente (Opcional)</label>
+            <input type="number" id="adm-uber-cost" class="form-input" placeholder="Dejar vacío o ej: 4500" />
+            <small style="color:var(--text-muted); display:block; margin-top:4px;">
+              Si ponés un monto (ej. 4500), el cotizador muestra el valor ida y vuelta ($9.000 por visita). Si lo dejás vacío, dice "Traslado según zona a coordinar".
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Link generado listo para pasarle al cliente:</label>
+            <div id="adm-generated-url" class="generated-url-box"></div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+              <button type="button" class="btn-primary" style="flex:1; justify-content:center;" data-action="copy-admin-url">
+                📋 Copiar Link para el Cliente
+              </button>
+              <button type="button" class="btn-secondary" data-action="test-admin-url">
+                👁️ Abrir y probar este Link
+              </button>
+            </div>
           </div>
         </div>
       </div>
+    </div>
+  </div>
     </div>
   </div>
 
