@@ -114,7 +114,7 @@
     uberOneWay: 0,
 
     // Decisiones del cliente
-    selectedServices: { v: false, cm: false, to: false, inu: false, ref: false }, // Usado si entra sin parámetros
+    selectedServices: { v: false, cm: false, to: false, inu: true, ref: true }, // inu y ref siempre activos por defecto
     inucornInterested: true, // Default checked según solicitud
 
     // Sistema de Referidos (25% OFF)
@@ -310,15 +310,15 @@
       state.enabledModules.v = hasV;
       state.enabledModules.cm = hasCM;
       state.enabledModules.to = hasTO;
-      state.enabledModules.inu = hasINU;
-      state.enabledModules.ref = hasREF;
+      state.enabledModules.inu = true; // Beneficio siempre activo
+      state.enabledModules.ref = true; // Beneficio siempre activo
     } else {
       state.hasExplicitParams = false;
       state.enabledModules.v = false;
       state.enabledModules.cm = false;
       state.enabledModules.to = false;
-      state.enabledModules.inu = false;
-      state.enabledModules.ref = false;
+      state.enabledModules.inu = true; // Beneficio siempre activo
+      state.enabledModules.ref = true; // Beneficio siempre activo
     }
 
     const clientParam = params.get("c") || params.get("cliente") || "";
@@ -368,12 +368,8 @@
     const wantsTO = state.hasExplicitParams
       ? state.enabledModules.to
       : state.selectedServices.to;
-    const wantsINU = state.hasExplicitParams
-      ? state.enabledModules.inu
-      : state.selectedServices.inu;
-    const wantsREF = state.hasExplicitParams
-      ? state.enabledModules.ref
-      : state.selectedServices.ref;
+    const wantsINU = true; // Beneficios siempre activos en el recorrido
+    const wantsREF = true;
 
     // Pasos de Videos
     if (wantsV) {
@@ -395,10 +391,8 @@
       queue.push({ id: "to_choice", title: "Catálogo / Tienda" });
     }
 
-    // Paso de Beneficios / Cupones (Inucorn y/o Referidos en la misma pantalla)
-    if (wantsINU || wantsREF) {
-      queue.push({ id: "benefits_banner", title: "Beneficios y Descuentos" });
-    }
+    // Paso de Beneficios / Cupones (Inucorn y Referidos siempre presentes)
+    queue.push({ id: "benefits_banner", title: "Beneficios y Descuentos" });
 
     // Paso final: Resumen y cierre
     queue.push({ id: "summary", title: "Resumen y Cierre" });
@@ -619,8 +613,6 @@
     const isV = state.selectedServices.v;
     const isCM = state.selectedServices.cm;
     const isTO = state.selectedServices.to;
-    const isInu = state.selectedServices.inu;
-    const isRef = state.selectedServices.ref;
 
     let greetingText = "";
     if (state.clientName && state.businessName) {
@@ -661,25 +653,6 @@
           <div>
             <div class="decision-card-title">🛒 Catálogo Digital / Tienda Online</div>
             <div class="decision-card-desc">Armado en WhatsApp Business o Tienda Nube / Empretienda (Pago por única vez).</div>
-          </div>
-        </div>
-
-        <div class="module-select-card inucorn-select-card ${isInu ? "selected" : ""}" data-action="toggle-service-pick" data-service="inu">
-          <div class="module-checkbox-icon inucorn-chk-icon">${isInu ? "✓" : ""}</div>
-          <div>
-            <div class="decision-card-title inucorn-text-title">🎁 Descuento especial en imprenta y papelería Inucorn</div>
-            <div class="decision-card-desc">${CFG.inucorn?.descuentoPct || 10}% OFF en folletería, tarjetas, stickers y cartelería para tu local o packaging con el código de Fran.</div>
-          </div>
-        </div>
-
-        <div class="module-select-card referral-select-card ${isRef ? "selected" : ""}" data-action="toggle-service-pick" data-service="ref">
-          <div class="module-checkbox-icon referral-chk-icon">${isRef ? "✓" : ""}</div>
-          <div style="flex:1;">
-            <div class="decision-card-title referral-text-title">🤝 ${CFG.referidos?.descuentoPct || 25}% OFF en tu pedido con tu código de referido</div>
-            <div class="decision-card-desc">
-              Accedé a ${CFG.referidos?.descuentoPct || 25}% OFF recomendando o ingresando el código de un amigo.
-              <a href="javascript:void(0)" class="referral-terms-link" data-action="open-referral-terms">Ver términos y condiciones</a>
-            </div>
           </div>
         </div>
       </div>
@@ -1159,14 +1132,10 @@
     `;
   }
 
-  // Paso de Beneficios y Cupones (Inucorn y/o Referidos en la misma pantalla)
+  // Paso de Beneficios y Cupones (Inucorn y Referidos en la misma pantalla)
   function renderStep_Benefits() {
-    const wantsINU = state.hasExplicitParams
-      ? state.enabledModules.inu
-      : state.selectedServices.inu;
-    const wantsREF = state.hasExplicitParams
-      ? state.enabledModules.ref
-      : state.selectedServices.ref;
+    const wantsINU = true; // Beneficios siempre activos en el recorrido
+    const wantsREF = true;
 
     const inuDisc = CFG.inucorn?.descuentoPct || 10;
     const refDisc = CFG.referidos?.descuentoPct || 25;
@@ -1328,11 +1297,8 @@
       `);
     }
 
-    // Item Inucorn (si lo seleccionó y mantuvo el checkbox tildado)
-    const wantsINU = state.hasExplicitParams
-      ? state.enabledModules.inu
-      : state.selectedServices.inu;
-    if (wantsINU && state.inucornInterested) {
+    // Item Inucorn (si mantuvo el checkbox tildado)
+    if (state.inucornInterested) {
       items.push(`
         <div class="final-summary-item" style="border-left: 3px solid var(--inucorn-purple); padding-left: 10px;">
           <div>
@@ -1346,11 +1312,8 @@
       `);
     }
 
-    // Item Referidos (si lo seleccionó y tiene código ingresado o quiere recomendar)
-    const wantsREF = state.hasExplicitParams
-      ? state.enabledModules.ref
-      : state.selectedServices.ref;
-    if (wantsREF && (state.wantToRefer || state.inputReferredCode)) {
+    // Item Referidos (si tiene código ingresado o quiere recomendar)
+    if (state.wantToRefer || state.inputReferredCode) {
       const details = [];
       if (state.inputReferredCode) {
         details.push(`Código de quien te recomendó: <strong>${state.inputReferredCode}</strong>`);
@@ -1505,26 +1468,18 @@
       );
     }
 
-    const wantsINU = state.hasExplicitParams
-      ? state.enabledModules.inu
-      : state.selectedServices.inu;
-    if (wantsINU && state.inucornInterested) {
+    if (state.inucornInterested) {
       lines.push(``);
       lines.push(`Además, me interesa el descuento de Imprenta Inucorn`);
     }
 
-    const wantsREF = state.hasExplicitParams
-      ? state.enabledModules.ref
-      : state.selectedServices.ref;
-    if (wantsREF) {
-      if (state.inputReferredCode) {
-        lines.push(``);
-        lines.push(`Mi código de referido es ${state.inputReferredCode}`);
-      }
-      if (state.wantToRefer) {
-        lines.push(``);
-        lines.push(`Mi código de referente es ${state.myReferralCode}`);
-      }
+    if (state.inputReferredCode) {
+      lines.push(``);
+      lines.push(`Mi código de referido es ${state.inputReferredCode}`);
+    }
+    if (state.wantToRefer) {
+      lines.push(``);
+      lines.push(`Mi código de referente es ${state.myReferralCode}`);
     }
 
     lines.push(``);
@@ -1604,11 +1559,9 @@
           if (
             !state.selectedServices.v &&
             !state.selectedServices.cm &&
-            !state.selectedServices.to &&
-            !state.selectedServices.inu &&
-            !state.selectedServices.ref
+            !state.selectedServices.to
           ) {
-            alert("Elegí al menos un servicio o beneficio para comenzar.");
+            alert("Elegí al menos un servicio para comenzar.");
             return;
           }
           advanceStep();
