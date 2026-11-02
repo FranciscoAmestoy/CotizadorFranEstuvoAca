@@ -1481,3 +1481,128 @@ details.mini-accordion li::before {
   flex-wrap: wrap;
   margin-top: 18px;
 }
+
+/* ==========================================================================
+   PASO GOOGLE BUSINESS / MOSTRÁ TU NEGOCIO EN GOOGLE
+   ========================================================================== */
+.google-benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin: 16px 0 20px 0;
+}
+
+@media (max-width: 640px) {
+  .google-benefits-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.google-benefit-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #ffffff;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.google-benefit-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.google-benefit-icon {
+  font-size: 1.8rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.google-benefit-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.google-benefit-desc {
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.google-price-banner {
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  text-align: center;
+  margin: 18px 0;
+}
+
+.google-price-banner.bonificado {
+  background: linear-gradient(135deg, #15803d 0%, #16a34a 100%);
+  color: #ffffff;
+  border: 2px dashed #bbf7d0;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.25);
+}
+
+.google-price-banner.normal {
+  background: #f0fdf4;
+  border: 2px solid #86efac;
+  color: #166534;
+}
+
+.google-business-card-toggle {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #ffffff;
+  border: 2.5px solid #cbd5e1;
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.google-business-card-toggle:hover {
+  border-color: #0891b2;
+  background: #f8fafc;
+  transform: translateY(-1px);
+}
+
+.google-business-card-toggle.checked {
+  border-color: #16a34a;
+  background: #f0fdf4;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18);
+}
+
+.google-business-chk {
+  width: 26px;
+  height: 26px;
+  accent-color: #16a34a;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.google-chk-content {
+  flex: 1;
+}
+
+.google-chk-title {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--text-main);
+  line-height: 1.25;
+}
+
+.google-business-card-toggle.checked .google-chk-title {
+  color: #15803d;
+}
+
+.google-chk-desc {
+  font-size: 0.86rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}

@@ -6,92 +6,6 @@
 
 (function () {
   const CFG = window.COTIZADOR_CONFIG;
-  const DEFAULT_CFG = JSON.parse(JSON.stringify(window.COTIZADOR_CONFIG));
-
-  function applyConfigOverrides(custom) {
-    if (!custom) return;
-    if (custom.videos) {
-      if (
-        custom.videos.graboEdiPubli !== undefined &&
-        CFG.videos?.modalidades?.graboEdiPubli
-      ) {
-        CFG.videos.modalidades.graboEdiPubli.precioBase = Number(
-          custom.videos.graboEdiPubli
-        );
-      }
-      if (
-        custom.videos.ediPubli !== undefined &&
-        CFG.videos?.modalidades?.ediPubli
-      ) {
-        CFG.videos.modalidades.ediPubli.precioBase = Number(
-          custom.videos.ediPubli
-        );
-      }
-      if (custom.videos.descuentos && CFG.videos?.descuentoPorUnidad) {
-        Object.keys(custom.videos.descuentos).forEach((u) => {
-          const item = CFG.videos.descuentoPorUnidad.find(
-            (d) => d.unidad === Number(u)
-          );
-          if (item) item.descuentoPct = Number(custom.videos.descuentos[u]);
-        });
-      }
-    }
-    if (custom.cm && CFG.cm?.planes) {
-      if (custom.cm.presencia !== undefined) {
-        const p = CFG.cm.planes.find((pl) => pl.id === "presencia");
-        if (p) p.precioMensual = Number(custom.cm.presencia);
-      }
-      if (custom.cm.crecimiento !== undefined) {
-        const p = CFG.cm.planes.find((pl) => pl.id === "crecimiento");
-        if (p) p.precioMensual = Number(custom.cm.crecimiento);
-      }
-      if (custom.cm.total !== undefined) {
-        const p = CFG.cm.planes.find((pl) => pl.id === "total");
-        if (p) p.precioMensual = Number(custom.cm.total);
-      }
-    }
-    if (custom.tienda && CFG.tienda) {
-      if (custom.tienda.catalogoWsp !== undefined) {
-        const o = CFG.tienda.opciones?.find((op) => op.id === "catalogoWsp");
-        if (o) o.precioUnico = Number(custom.tienda.catalogoWsp);
-      }
-      if (custom.tienda.tiendaNube !== undefined) {
-        const o = CFG.tienda.opciones?.find((op) => op.id === "tiendaNube");
-        if (o) o.precioUnico = Number(custom.tienda.tiendaNube);
-      }
-      if (custom.tienda.ambos !== undefined) {
-        CFG.tienda.precioAmbos = Number(custom.tienda.ambos);
-      }
-    }
-    if (custom.meses && CFG.mesesOpciones) {
-      Object.keys(custom.meses).forEach((m) => {
-        const found = CFG.mesesOpciones.find((mo) => mo.meses === Number(m));
-        if (found) found.descuentoPct = Number(custom.meses[m]);
-      });
-    }
-    if (custom.inucorn && CFG.inucorn) {
-      if (custom.inucorn.descuentoPct !== undefined) {
-        CFG.inucorn.descuentoPct = Number(custom.inucorn.descuentoPct);
-      }
-    }
-    if (custom.referidos && CFG.referidos) {
-      if (custom.referidos.descuentoPct !== undefined) {
-        CFG.referidos.descuentoPct = Number(custom.referidos.descuentoPct);
-      }
-    }
-  }
-
-  function loadPersistedConfig() {
-    try {
-      const saved = localStorage.getItem("FEA_CUSTOM_CONFIG");
-      if (saved) {
-        const custom = JSON.parse(saved);
-        applyConfigOverrides(custom);
-      }
-    } catch (e) {
-      console.warn("No se pudo cargar la configuración personalizada de localStorage", e);
-    }
-  }
 
   // Generador de código alfanumérico de 5 caracteres (distingue mayús de minús, sin símbolos)
   function generateReferralCode() {
@@ -128,6 +42,7 @@
     cmPlanId: null, // 'presencia' | 'crecimiento' | 'total' | 'skip'
     cmMonths: 3, // 1, 2, 3, 6 meses
     tiendaChoice: null, // 'catalogoWsp' | 'tiendaNube' | 'ambos' | 'skip'
+    googleBusinessWanted: false, // Default desactivado según solicitud: "Quiero que encuentren mi negocio en Google!"
 
     // Índice del paso actual en la cola activa
     currentStepIndex: 0,
@@ -281,7 +196,36 @@
       totalFinal += tq.totalFinal;
     }
 
+    // Servicio Google Business ("Mostrá Tu Negocio En Google!")
+    // Precio 26.720 si se contrata solo, 100% BONIFICADO ($0) si contrata cualquier otro servicio
+    if (state.googleBusinessWanted) {
+      const gPrice = CFG.googleBusiness?.precioBase || 26720;
+      if (hasOtherServicesContracted()) {
+        totalSaved += gPrice;
+      } else {
+        totalFinal += gPrice;
+      }
+    }
+
     return { totalFinal, totalSaved };
+  }
+
+  function hasOtherServicesContracted() {
+    const wantsV = state.hasExplicitParams
+      ? state.enabledModules.v
+      : state.selectedServices.v;
+    const wantsCM = state.hasExplicitParams
+      ? state.enabledModules.cm
+      : state.selectedServices.cm;
+    const wantsTO = state.hasExplicitParams
+      ? state.enabledModules.to
+      : state.selectedServices.to;
+
+    const hasV = wantsV && Boolean(state.videoMode);
+    const hasCM = wantsCM && Boolean(state.cmPlanId && state.cmPlanId !== "skip");
+    const hasTO = wantsTO && Boolean(state.tiendaChoice && state.tiendaChoice !== "skip");
+
+    return hasV || hasCM || hasTO;
   }
 
   // ==========================================================================
@@ -304,6 +248,14 @@
     const hasTO = keysLower.includes("to");
     const hasINU = keysLower.includes("inu");
     const hasREF = keysLower.includes("ref");
+    const hasG =
+      keysLower.includes("g") ||
+      keysLower.includes("google") ||
+      keysLower.includes("maps");
+
+    if (hasG) {
+      state.googleBusinessWanted = true;
+    }
 
     if (hasV || hasCM || hasTO || hasINU || hasREF) {
       state.hasExplicitParams = true;
@@ -338,10 +290,6 @@
     const uberParam = parseInt(params.get("uber") || "0", 10);
     if (!isNaN(uberParam) && uberParam > 0) {
       state.uberOneWay = uberParam;
-    }
-
-    if (keysLower.includes("admin")) {
-      setTimeout(() => openAdminModal(), 200);
     }
   }
 
@@ -390,6 +338,9 @@
     if (wantsTO) {
       queue.push({ id: "to_choice", title: "Catálogo / Tienda" });
     }
+
+    // Paso de Google Business (Siempre visible antes de Beneficios y Descuentos)
+    queue.push({ id: "google_business", title: "Mostrá Tu Negocio En Google!" });
 
     // Paso de Beneficios / Cupones (Inucorn y Referidos siempre presentes)
     queue.push({ id: "benefits_banner", title: "Beneficios y Descuentos" });
@@ -540,6 +491,9 @@
         break;
       case "to_choice":
         html = renderStep_TOChoice();
+        break;
+      case "google_business":
+        html = renderStep_GoogleBusiness();
         break;
       case "benefits_banner":
       case "inu_banner":
@@ -1132,6 +1086,134 @@
     `;
   }
 
+  // Paso: Mostrá Tu Negocio En Google! (Siempre visible antes de Beneficios y Descuentos)
+  function renderStep_GoogleBusiness() {
+    const gCfg = CFG.googleBusiness || {
+      precioBase: 26720,
+      ventajas: [],
+    };
+    const isBonificado = hasOtherServicesContracted();
+    const isWanted = state.googleBusinessWanted;
+
+    const ventajas =
+      gCfg.ventajas && gCfg.ventajas.length > 0
+        ? gCfg.ventajas
+        : [
+            {
+              icono: "📍",
+              titulo: "Aparecé primero en tu barrio y ciudad",
+              desc: "Cuando la gente busca en Google o Maps lo que ofrecés ('cerca de mí'), tu negocio figura destacado en el mapa.",
+            },
+            {
+              icono: "⭐",
+              titulo: "Opiniones y 5 estrellas de clientes",
+              desc: "Generá confianza inmediata: las reseñas de clientes reales hacen que te elijan a vos antes que a la competencia.",
+            },
+            {
+              icono: "🕒",
+              titulo: "Horarios, fotos y WhatsApp a un toque",
+              desc: "Tus clientes ven cuándo abrís, fotos de tus productos o local, y tocan un solo botón para escribirte a WhatsApp.",
+            },
+            {
+              icono: "🚀",
+              titulo: "Mostrador abierto 24/7 sin pagar abono mensual",
+              desc: "No es un anuncio pago que vence: tu ficha queda online, activa y visible de forma permanente.",
+            },
+          ];
+
+    const ventajasHTML = ventajas
+      .map(
+        (v) => `
+        <div class="google-benefit-card">
+          <div class="google-benefit-icon">${v.icono}</div>
+          <div>
+            <div class="google-benefit-title">${v.titulo}</div>
+            <div class="google-benefit-desc">${v.desc}</div>
+          </div>
+        </div>
+      `
+      )
+      .join("");
+
+    const priceBoxHTML = isBonificado
+      ? `
+        <div class="google-price-banner bonificado">
+          <div style="font-size:0.85rem; font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">
+            🎉 Beneficio especial por contratar tus servicios
+          </div>
+          <div style="display:flex; align-items:baseline; justify-content:center; gap:10px; margin:6px 0;">
+            <span style="font-size:1.15rem; text-decoration:line-through; opacity:0.85; font-weight:700;">
+              ${formatARS(gCfg.precioBase)}
+            </span>
+            <span style="font-size:1.65rem; font-weight:900;">
+              ¡100% BONIFICADO! ($0)
+            </span>
+          </div>
+          <div style="font-size:0.88rem; font-weight:600; opacity:0.95;">
+            ¡Te queda completamente gratis al avanzar con tu propuesta!
+          </div>
+        </div>
+      `
+      : `
+        <div class="google-price-banner normal">
+          <div style="font-size:0.85rem; font-weight:800; text-transform:uppercase; color:#0e7490; letter-spacing:0.5px;">
+            Inversión única para tu negocio
+          </div>
+          <div style="font-size:1.75rem; font-weight:900; color:#0f172a; margin:4px 0;">
+            ${formatARS(gCfg.precioBase)}
+          </div>
+          <div style="font-size:0.88rem; color:var(--text-secondary); font-weight:600;">
+            Pago por única vez • Ficha oficial y presencia activa para siempre
+          </div>
+        </div>
+      `;
+
+    return `
+      <div class="step-header">
+        <div class="step-greeting-pill" style="background:#e0f2fe; color:#0369a1; border-color:#bae6fd;">
+          📍 Visibilidad Local en Google
+        </div>
+        <h1 class="step-question-title">Mostrá Tu Negocio En Google!</h1>
+        <p class="step-question-subtitle">
+          El 86% de las personas buscan en Google Maps antes de ir o encargar a un negocio. Fran configura y optimiza tu perfil oficial para que nuevos clientes te encuentren al instante.
+        </p>
+      </div>
+
+      <div class="google-benefits-grid">
+        ${ventajasHTML}
+      </div>
+
+      ${priceBoxHTML}
+
+      <div style="margin-top:20px;">
+        <label class="google-business-card-toggle ${isWanted ? "checked" : ""}" for="chk-google-business">
+          <input 
+            type="checkbox" 
+            id="chk-google-business" 
+            class="google-business-chk" 
+            ${isWanted ? "checked" : ""} 
+          />
+          <div class="google-chk-content">
+            <div class="google-chk-title">Quiero que encuentren mi negocio en Google!</div>
+            <div class="google-chk-desc">
+              ${
+                isBonificado
+                  ? "Marcá esta casilla para incluir la configuración de tu ficha 100% Bonificada ($0)."
+                  : "Marcá esta casilla para sumar la configuración oficial de tu ficha por " +
+                    formatARS(gCfg.precioBase) +
+                    "."
+              }
+            </div>
+          </div>
+        </label>
+      </div>
+
+      <button type="button" class="btn-primary" style="width:100%; justify-content:center; padding:16px; margin-top:24px; font-size:1.15rem;" data-action="submit-google-step">
+        Continuar ➔
+      </button>
+    `;
+  }
+
   // Paso de Beneficios y Cupones (Inucorn y Referidos en la misma pantalla)
   function renderStep_Benefits() {
     const wantsINU = true; // Beneficios siempre activos en el recorrido
@@ -1297,6 +1379,38 @@
       `);
     }
 
+    // Item Google Business ("Mostrá Tu Negocio En Google!")
+    if (state.googleBusinessWanted) {
+      const gPrice = CFG.googleBusiness?.precioBase || 26720;
+      const isBonificado = hasOtherServicesContracted();
+      if (isBonificado) {
+        items.push(`
+          <div class="final-summary-item" style="border-left: 3px solid #16a34a; padding-left: 10px;">
+            <div>
+              <div class="final-item-title" style="color:#15803d;">📍 Mostrá Tu Negocio En Google!</div>
+              <div class="final-item-desc">Configuración y optimización profesional de tu Ficha en Google Maps y Búsqueda</div>
+            </div>
+            <div class="final-item-price" style="text-align:right;">
+              <div style="text-decoration:line-through; color:var(--text-muted); font-size:0.85rem;">${formatARS(gPrice)}</div>
+              <div style="color:#16a34a; font-weight:800; font-size:1rem;">BONIFICADO ($0)</div>
+            </div>
+          </div>
+        `);
+      } else {
+        items.push(`
+          <div class="final-summary-item" style="border-left: 3px solid #0891b2; padding-left: 10px;">
+            <div>
+              <div class="final-item-title" style="color:#0891b2;">📍 Mostrá Tu Negocio En Google!</div>
+              <div class="final-item-desc">Configuración y optimización profesional de tu Ficha en Google Maps (Pago único)</div>
+            </div>
+            <div class="final-item-price" style="color:var(--text-main); font-size:1rem;">
+              ${formatARS(gPrice)}
+            </div>
+          </div>
+        `);
+      }
+    }
+
     // Item Inucorn (si mantuvo el checkbox tildado)
     if (state.inucornInterested) {
       items.push(`
@@ -1454,6 +1568,16 @@
       lines.push(`*${tq.label}:* Pago único -> *${formatARS(tq.totalFinal)}*`);
     }
 
+    if (state.googleBusinessWanted) {
+      const gPrice = CFG.googleBusiness?.precioBase || 26720;
+      const isBonificado = hasOtherServicesContracted();
+      if (isBonificado) {
+        lines.push(`*Ficha en Google Maps:* 100% BONIFICADO ($0) - ¡Quiero que encuentren mi negocio en Google!`);
+      } else {
+        lines.push(`*Ficha en Google Maps:* Pago único -> *${formatARS(gPrice)}*`);
+      }
+    }
+
     lines.push(``);
     lines.push(`*TOTAL COTIZADO:* *${formatARS(totals.totalFinal)}*`);
     if (totals.totalSaved > 0) {
@@ -1542,6 +1666,10 @@
         }
 
         case "restart-flow": {
+          state.videoMode = null;
+          state.cmPlanId = null;
+          state.tiendaChoice = null;
+          state.googleBusinessWanted = false;
           state.currentStepIndex = 0;
           renderCurrentStep();
           window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1556,14 +1684,6 @@
         }
 
         case "confirm-services": {
-          if (
-            !state.selectedServices.v &&
-            !state.selectedServices.cm &&
-            !state.selectedServices.to
-          ) {
-            alert("Elegí al menos un servicio para comenzar.");
-            return;
-          }
           advanceStep();
           break;
         }
@@ -1639,55 +1759,37 @@
           break;
         }
 
-        case "open-admin": {
-          openAdminModal();
+        case "submit-google-step": {
+          const chk = document.getElementById("chk-google-business");
+          if (chk) {
+            state.googleBusinessWanted = chk.checked;
+          }
+          if (state.googleBusinessWanted) {
+            advanceStep();
+          } else {
+            openGoogleWarningModal();
+          }
           break;
         }
 
-        case "close-admin": {
-          closeAdminModal();
+        case "google-opt-add": {
+          state.googleBusinessWanted = true;
+          closeGoogleWarningModal();
+          advanceStep();
           break;
         }
 
-        case "switch-admin-tab": {
-          const tab = target.getAttribute("data-tab");
-          if (tab) switchAdminTab(tab);
+        case "google-opt-already": {
+          state.googleBusinessWanted = false;
+          closeGoogleWarningModal();
+          advanceStep();
           break;
         }
 
-        case "save-admin-prices": {
-          saveAdminPrices();
-          break;
-        }
-
-        case "reset-admin-prices": {
-          resetAdminPrices();
-          break;
-        }
-
-        case "copy-admin-config": {
-          copyAdminConfigToClipboard();
-          break;
-        }
-
-        case "verify-admin-pin": {
-          verifyAdminPin();
-          break;
-        }
-
-        case "copy-admin-url": {
-          const url = updateAdminGeneratedUrl();
-          navigator.clipboard.writeText(url);
-          target.textContent = "✅ ¡Link copiado al portapapeles!";
-          setTimeout(() => {
-            target.textContent = "📋 Copiar Link para el Cliente";
-          }, 2000);
-          break;
-        }
-
-        case "test-admin-url": {
-          const url = updateAdminGeneratedUrl();
-          window.location.href = url;
+        case "google-opt-skip": {
+          state.googleBusinessWanted = false;
+          closeGoogleWarningModal();
+          advanceStep();
           break;
         }
       }
@@ -1708,13 +1810,21 @@
       }
     });
 
-    // Checkbox de interés de Inucorn y de Referidos
+    // Checkbox de interés de Inucorn, Referidos y Google Business
     document.body.addEventListener("change", (e) => {
       if (e.target.id === "chk-inu-interest") {
         state.inucornInterested = e.target.checked;
       }
       if (e.target.id === "chk-want-refer") {
         state.wantToRefer = e.target.checked;
+      }
+      if (e.target.id === "chk-google-business") {
+        state.googleBusinessWanted = e.target.checked;
+        const toggleCard = e.target.closest(".google-business-card-toggle");
+        if (toggleCard) {
+          toggleCard.classList.toggle("checked", e.target.checked);
+        }
+        updateLiveSummaryBar();
       }
     });
 
@@ -1724,40 +1834,10 @@
         state.inputReferredCode = e.target.value.trim();
       }
     });
-
-    // Inputs de Mantenimiento / Admin
-    const adminInputs = [
-      "adm-chk-v",
-      "adm-chk-cm",
-      "adm-chk-to",
-      "adm-chk-inu",
-      "adm-chk-ref",
-      "adm-client-name",
-      "adm-business-name",
-      "adm-client-note",
-      "adm-uber-cost",
-    ];
-    adminInputs.forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) {
-        el.addEventListener("input", updateAdminGeneratedUrl);
-        el.addEventListener("change", updateAdminGeneratedUrl);
-      }
-    });
-
-    const pinInput = document.getElementById("admin-pin-input");
-    if (pinInput) {
-      pinInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          verifyAdminPin();
-        }
-      });
-    }
   }
 
   // ==========================================================================
-  // 7. MODALES Y MANTENIMIENTO PROTEGIDO (SHA-256)
+  // 7. MODALES
   // ==========================================================================
 
   function openReferralTermsModal() {
@@ -1768,370 +1848,33 @@
     document.getElementById("referral-terms-modal")?.classList.add("hidden");
   }
 
-  async function sha256Hex(text) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(text);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-    return Array.from(new Uint8Array(hashBuffer))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
+  function openGoogleWarningModal() {
+    const modal = document.getElementById("google-warning-modal");
+    if (!modal) return;
+    const alertBox = document.getElementById("google-modal-bonificado-alert");
+    if (alertBox) {
+      if (hasOtherServicesContracted()) {
+        alertBox.innerHTML =
+          "🎁 ¡Recordá que al contratar tus otros servicios, este servicio te queda <strong>100% BONIFICADO ($0)</strong>!";
+        alertBox.style.display = "block";
+      } else {
+        alertBox.innerHTML =
+          "💡 Inversión única de <strong>$26.720</strong> para dejar tu ficha verificada y visible para siempre.";
+        alertBox.style.display = "block";
+      }
+    }
+    modal.classList.remove("hidden");
   }
 
-  function openAdminModal() {
-    document.getElementById("admin-modal").classList.remove("hidden");
-  }
-
-  function closeAdminModal() {
-    document.getElementById("admin-modal").classList.add("hidden");
-  }
-
-  async function verifyAdminPin() {
-    const input = document.getElementById("admin-pin-input");
-    const errorEl = document.getElementById("admin-pin-error");
-    const pin = (input.value || "").trim();
-
-    const salted = `${CFG.adminPinSalt}${pin}${CFG.adminPinSuffix}`;
-    const hash = await sha256Hex(salted);
-
-    if (hash === CFG.adminPinHash) {
-      errorEl.style.display = "none";
-      document.getElementById("admin-login-view").style.display = "none";
-      document.getElementById("admin-panel-view").style.display = "block";
-      populateAdminPriceInputs();
-      updateAdminGeneratedUrl();
-    } else {
-      errorEl.style.display = "block";
-      errorEl.textContent = "Contraseña incorrecta.";
-    }
-  }
-
-  function switchAdminTab(tab) {
-    document.querySelectorAll(".admin-tab-btn").forEach((btn) => {
-      btn.classList.toggle("active", btn.getAttribute("data-tab") === tab);
-    });
-    const pricesView = document.getElementById("admin-tab-prices");
-    const linksView = document.getElementById("admin-tab-links");
-    if (pricesView)
-      pricesView.style.display = tab === "prices" ? "block" : "none";
-    if (linksView)
-      linksView.style.display = tab === "links" ? "block" : "none";
-  }
-
-  function populateAdminPriceInputs() {
-    // Videos
-    const vGrabo = document.getElementById("adm-price-v-grabo");
-    if (vGrabo && CFG.videos?.modalidades?.graboEdiPubli) {
-      vGrabo.value = CFG.videos.modalidades.graboEdiPubli.precioBase;
-    }
-
-    const vEdi = document.getElementById("adm-price-v-edi");
-    if (vEdi && CFG.videos?.modalidades?.ediPubli) {
-      vEdi.value = CFG.videos.modalidades.ediPubli.precioBase;
-    }
-
-    // CM
-    const cmPres = document.getElementById("adm-price-cm-presencia");
-    if (cmPres) {
-      cmPres.value =
-        CFG.cm?.planes?.find((p) => p.id === "presencia")?.precioMensual ||
-        180000;
-    }
-
-    const cmCrec = document.getElementById("adm-price-cm-crecimiento");
-    if (cmCrec) {
-      cmCrec.value =
-        CFG.cm?.planes?.find((p) => p.id === "crecimiento")?.precioMensual ||
-        280000;
-    }
-
-    const cmTot = document.getElementById("adm-price-cm-total");
-    if (cmTot) {
-      cmTot.value =
-        CFG.cm?.planes?.find((p) => p.id === "total")?.precioMensual || 400000;
-    }
-
-    // Tienda
-    const toWsp = document.getElementById("adm-price-to-wsp");
-    if (toWsp) {
-      toWsp.value =
-        CFG.tienda?.opciones?.find((o) => o.id === "catalogoWsp")
-          ?.precioUnico || 50000;
-    }
-
-    const toNube = document.getElementById("adm-price-to-nube");
-    if (toNube) {
-      toNube.value =
-        CFG.tienda?.opciones?.find((o) => o.id === "tiendaNube")?.precioUnico ||
-        50000;
-    }
-
-    const toAmbos = document.getElementById("adm-price-to-ambos");
-    if (toAmbos) {
-      toAmbos.value =
-        CFG.tienda?.precioAmbos !== undefined ? CFG.tienda.precioAmbos : 100000;
-    }
-
-    // Meses
-    const m2 = document.getElementById("adm-disc-m-2");
-    if (m2) m2.value = getMonthDiscountPct(2);
-
-    const m3 = document.getElementById("adm-disc-m-3");
-    if (m3) m3.value = getMonthDiscountPct(3);
-
-    const m6 = document.getElementById("adm-disc-m-6");
-    if (m6) m6.value = getMonthDiscountPct(6);
-
-    const m9 = document.getElementById("adm-disc-m-9");
-    if (m9) m9.value = getMonthDiscountPct(9);
-
-    const m12 = document.getElementById("adm-disc-m-12");
-    if (m12) m12.value = getMonthDiscountPct(12);
-
-    // Videos Vol
-    const v2 = document.getElementById("adm-disc-v-2");
-    if (v2) v2.value = getVideoUnitDiscountPct(2);
-
-    const v3 = document.getElementById("adm-disc-v-3");
-    if (v3) v3.value = getVideoUnitDiscountPct(3);
-
-    const v4 = document.getElementById("adm-disc-v-4");
-    if (v4) v4.value = getVideoUnitDiscountPct(4);
-
-    const v5 = document.getElementById("adm-disc-v-5");
-    if (v5) v5.value = getVideoUnitDiscountPct(5);
-
-    const v6 = document.getElementById("adm-disc-v-6");
-    if (v6) v6.value = getVideoUnitDiscountPct(6);
-
-    // Alianzas
-    const inu = document.getElementById("adm-disc-inu");
-    if (inu) inu.value = CFG.inucorn?.descuentoPct || 10;
-
-    const ref = document.getElementById("adm-disc-ref");
-    if (ref) ref.value = CFG.referidos?.descuentoPct || 25;
-  }
-
-  function saveAdminPrices() {
-    const customConfig = {
-      videos: {
-        graboEdiPubli:
-          parseInt(
-            document.getElementById("adm-price-v-grabo")?.value,
-            10
-          ) || 50000,
-        ediPubli:
-          parseInt(document.getElementById("adm-price-v-edi")?.value, 10) ||
-          35000,
-        descuentos: {
-          2:
-            parseInt(document.getElementById("adm-disc-v-2")?.value, 10) || 10,
-          3:
-            parseInt(document.getElementById("adm-disc-v-3")?.value, 10) || 20,
-          4:
-            parseInt(document.getElementById("adm-disc-v-4")?.value, 10) || 30,
-          5:
-            parseInt(document.getElementById("adm-disc-v-5")?.value, 10) || 40,
-          6:
-            parseInt(document.getElementById("adm-disc-v-6")?.value, 10) || 50,
-        },
-      },
-      cm: {
-        presencia:
-          parseInt(
-            document.getElementById("adm-price-cm-presencia")?.value,
-            10
-          ) || 180000,
-        crecimiento:
-          parseInt(
-            document.getElementById("adm-price-cm-crecimiento")?.value,
-            10
-          ) || 280000,
-        total:
-          parseInt(
-            document.getElementById("adm-price-cm-total")?.value,
-            10
-          ) || 400000,
-      },
-      tienda: {
-        catalogoWsp:
-          parseInt(
-            document.getElementById("adm-price-to-wsp")?.value,
-            10
-          ) || 50000,
-        tiendaNube:
-          parseInt(
-            document.getElementById("adm-price-to-nube")?.value,
-            10
-          ) || 50000,
-        ambos:
-          parseInt(
-            document.getElementById("adm-price-to-ambos")?.value,
-            10
-          ) || 100000,
-      },
-      meses: {
-        2: parseInt(document.getElementById("adm-disc-m-2")?.value, 10) || 10,
-        3: parseInt(document.getElementById("adm-disc-m-3")?.value, 10) || 20,
-        6: parseInt(document.getElementById("adm-disc-m-6")?.value, 10) || 30,
-        9: parseInt(document.getElementById("adm-disc-m-9")?.value, 10) || 35,
-        12:
-          parseInt(document.getElementById("adm-disc-m-12")?.value, 10) || 40,
-      },
-      inucorn: {
-        descuentoPct:
-          parseInt(document.getElementById("adm-disc-inu")?.value, 10) || 10,
-      },
-      referidos: {
-        descuentoPct:
-          parseInt(document.getElementById("adm-disc-ref")?.value, 10) || 25,
-      },
-    };
-
-    localStorage.setItem("FEA_CUSTOM_CONFIG", JSON.stringify(customConfig));
-    applyConfigOverrides(customConfig);
-
-    const statusEl = document.getElementById("admin-prices-status");
-    if (statusEl) {
-      statusEl.className = "admin-status-message success";
-      statusEl.textContent =
-        "✅ ¡Precios y descuentos guardados y aplicados con éxito en todo el cotizador!";
-      statusEl.style.display = "block";
-      setTimeout(() => {
-        statusEl.style.display = "none";
-      }, 3500);
-    }
-
-    renderCurrentStep();
-  }
-
-  function resetAdminPrices() {
-    if (
-      !confirm(
-        "¿Seguro que querés restablecer todos los precios y descuentos a los valores originales de fábrica?"
-      )
-    ) {
-      return;
-    }
-    localStorage.removeItem("FEA_CUSTOM_CONFIG");
-
-    applyConfigOverrides({
-      videos: {
-        graboEdiPubli:
-          DEFAULT_CFG.videos.modalidades.graboEdiPubli.precioBase,
-        ediPubli: DEFAULT_CFG.videos.modalidades.ediPubli.precioBase,
-        descuentos: { 2: 10, 3: 20, 4: 30, 5: 40, 6: 50 },
-      },
-      cm: {
-        presencia: DEFAULT_CFG.cm.planes[0].precioMensual,
-        crecimiento: DEFAULT_CFG.cm.planes[1].precioMensual,
-        total: DEFAULT_CFG.cm.planes[2].precioMensual,
-      },
-      tienda: {
-        catalogoWsp: DEFAULT_CFG.tienda.opciones[0].precioUnico,
-        tiendaNube: DEFAULT_CFG.tienda.opciones[1].precioUnico,
-        ambos: DEFAULT_CFG.tienda.precioAmbos || 100000,
-      },
-      meses: { 2: 10, 3: 20, 6: 30, 9: 35, 12: 40 },
-      inucorn: { descuentoPct: DEFAULT_CFG.inucorn.descuentoPct },
-      referidos: {
-        descuentoPct: DEFAULT_CFG.referidos
-          ? DEFAULT_CFG.referidos.descuentoPct
-          : 25,
-      },
-    });
-
-    populateAdminPriceInputs();
-
-    const statusEl = document.getElementById("admin-prices-status");
-    if (statusEl) {
-      statusEl.className = "admin-status-message info";
-      statusEl.textContent = "🔄 Valores restablecidos a los de fábrica.";
-      statusEl.style.display = "block";
-      setTimeout(() => {
-        statusEl.style.display = "none";
-      }, 3500);
-    }
-
-    renderCurrentStep();
-  }
-
-  function copyAdminConfigToClipboard() {
-    const codeSnippet = `// Valores actualizados para config.js:
-videos: {
-  modalidades: {
-    graboEdiPubli: { precioBase: ${CFG.videos.modalidades.graboEdiPubli.precioBase} },
-    ediPubli: { precioBase: ${CFG.videos.modalidades.ediPubli.precioBase} }
-  },
-  descuentoPorUnidad: ${JSON.stringify(CFG.videos.descuentoPorUnidad, null, 4)}
-},
-cm: {
-  planes: [
-    { id: "presencia", precioMensual: ${CFG.cm.planes.find((p) => p.id === "presencia")?.precioMensual} },
-    { id: "crecimiento", precioMensual: ${CFG.cm.planes.find((p) => p.id === "crecimiento")?.precioMensual} },
-    { id: "total", precioMensual: ${CFG.cm.planes.find((p) => p.id === "total")?.precioMensual} }
-  ]
-},
-tienda: {
-  precioAmbos: ${CFG.tienda.precioAmbos},
-  opciones: [
-    { id: "catalogoWsp", precioUnico: ${CFG.tienda.opciones.find((o) => o.id === "catalogoWsp")?.precioUnico} },
-    { id: "tiendaNube", precioUnico: ${CFG.tienda.opciones.find((o) => o.id === "tiendaNube")?.precioUnico} }
-  ]
-},
-mesesOpciones: ${JSON.stringify(CFG.mesesOpciones.map((m) => ({ meses: m.meses, descuentoPct: m.descuentoPct })), null, 4)},
-inucorn: { descuentoPct: ${CFG.inucorn.descuentoPct} },
-referidos: { descuentoPct: ${CFG.referidos?.descuentoPct || 25} }
-`;
-
-    navigator.clipboard.writeText(codeSnippet);
-    const statusEl = document.getElementById("admin-prices-status");
-    if (statusEl) {
-      statusEl.className = "admin-status-message info";
-      statusEl.textContent =
-        "📋 ¡Código copiado al portapapeles! Listo para pegar en config.js.";
-      statusEl.style.display = "block";
-      setTimeout(() => {
-        statusEl.style.display = "none";
-      }, 3500);
-    }
-  }
-
-  function updateAdminGeneratedUrl() {
-    const baseUrl = window.location.origin + window.location.pathname;
-    const chkV = document.getElementById("adm-chk-v")?.checked;
-    const chkCM = document.getElementById("adm-chk-cm")?.checked;
-    const chkTO = document.getElementById("adm-chk-to")?.checked;
-    const chkINU = document.getElementById("adm-chk-inu")?.checked;
-    const chkREF = document.getElementById("adm-chk-ref")?.checked;
-    const client = document.getElementById("adm-client-name").value.trim();
-    const bizEl = document.getElementById("adm-business-name");
-    const biz = bizEl ? bizEl.value.trim() : "";
-    const note = document.getElementById("adm-client-note").value.trim();
-    const uber = parseInt(
-      document.getElementById("adm-uber-cost").value.trim() || "0",
-      10
-    );
-
-    const parts = [];
-    if (chkV) parts.push("v");
-    if (chkCM) parts.push("cm");
-    if (chkTO) parts.push("to");
-    if (chkINU) parts.push("inu");
-    if (chkREF) parts.push("ref");
-    if (client) parts.push(`c=${encodeURIComponent(client)}`);
-    if (biz) parts.push(`b=${encodeURIComponent(biz)}`);
-    if (note) parts.push(`nota=${encodeURIComponent(note)}`);
-    if (uber > 0) parts.push(`uber=${uber}`);
-
-    const finalUrl =
-      parts.length > 0 ? `${baseUrl}?${parts.join("&")}` : baseUrl;
-    document.getElementById("adm-generated-url").textContent = finalUrl;
-    return finalUrl;
+  function closeGoogleWarningModal() {
+    document.getElementById("google-warning-modal")?.classList.add("hidden");
   }
 
   // Inicialización
   document.addEventListener("DOMContentLoaded", () => {
-    loadPersistedConfig();
+    try {
+      localStorage.removeItem("FEA_CUSTOM_CONFIG");
+    } catch (e) {}
     parseUrlParameters();
     setupEventListeners();
     renderCurrentStep();

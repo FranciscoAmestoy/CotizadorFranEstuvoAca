@@ -17,7 +17,6 @@ window.COTIZADOR_CONFIG = {
   brandTagline:
     "Contenido y herramientas digitales para que tu negocio venda más",
 
-  // Hash SHA-256 ofuscado de tu clave Admin (nunca se guarda la clave en texto plano)
   adminPinSalt: "fea_salt_",
   adminPinSuffix: "_v1",
   adminPinHash:
@@ -32,7 +31,7 @@ window.COTIZADOR_CONFIG = {
         id: "graboEdiPubli",
         nombre: "Grabación + Edición + Publicación",
         nombreCorto: "Fran va, graba, edita y publica",
-        precioBase: 50000,
+        precioBase: 64780,
         requiereTraslado: true,
         badge: "Servicio Completo",
         enCriolloTitulo: "¿Qué es y para qué te sirve?",
@@ -48,7 +47,7 @@ window.COTIZADOR_CONFIG = {
         id: "ediPubli",
         nombre: "Edición + Publicación",
         nombreCorto: "Vos aportás los videos, yo edito y publico",
-        precioBase: 35000,
+        precioBase: 45346,
         requiereTraslado: false,
         badge: "Más Económico (Sin traslados)",
         enCriolloTitulo: "¿Qué es y para qué te sirve?",
@@ -141,7 +140,7 @@ window.COTIZADOR_CONFIG = {
       {
         id: "presencia",
         nombre: "Plan CM Presencia",
-        precioMensual: 180000,
+        precioMensual: 192350,
         badge: "Para arrancar y estar al día",
         enCriollo:
           "Ideal para que tu negocio figure en Google Maps, se vea activo todas las semanas y quien te busque vea una empresa seria y en movimiento.",
@@ -171,7 +170,7 @@ window.COTIZADOR_CONFIG = {
       {
         id: "crecimiento",
         nombre: "Plan CM Crecimiento",
-        precioMensual: 280000,
+        precioMensual: 295470,
         badge: "⭐ Recomendado para atraer clientes",
         destacado: true,
         enCriollo:
@@ -204,7 +203,7 @@ window.COTIZADOR_CONFIG = {
       {
         id: "total",
         nombre: "Plan CM Total",
-        precioMensual: 400000,
+        precioMensual: 436380,
         badge: "Delegación 100% + Atención Diaria",
         enCriollo:
           "Te olvidás por completo de las redes. Publicamos videos todos los días hábiles, respondemos mensajes todos los días y nos reunimos mes a mes para planificar campañas y ventas.",
@@ -248,12 +247,12 @@ window.COTIZADOR_CONFIG = {
     tituloSeccion: "Catálogo Digital / Tienda Online (Pago Único)",
     enCriolloGeneral:
       "Un catálogo digital es un mostrador abierto las 24 hs: mandás un solo link y el cliente ve fotos, características y precios listos para encargarte.",
-    precioAmbos: 100000,
+    precioAmbos: 119435,
     opciones: [
       {
         id: "catalogoWsp",
         nombre: "Digitalización de Catálogo WhatsApp Business",
-        precioUnico: 50000,
+        precioUnico: 64390,
         requiereTraslado: true,
         badge: "Pago Único • Ideal para vender por chat",
         enCriollo:
@@ -269,7 +268,7 @@ window.COTIZADOR_CONFIG = {
       {
         id: "tiendaNube",
         nombre: "Apertura y Carga de Tienda Online (Tienda Nube / Empretienda)",
-        precioUnico: 50000,
+        precioUnico: 64390,
         requiereTraslado: true,
         badge: "Pago Único • Tu propia web de ventas",
         enCriollo:
@@ -303,5 +302,38 @@ window.COTIZADOR_CONFIG = {
   // --------------------------------------------------------------------------
   referidos: {
     descuentoPct: 25,
+  },
+
+  // --------------------------------------------------------------------------
+  // 7. SERVICIO GOOGLE MAPS / GOOGLE BUSINESS (Parámetro URL: g / google)
+  // --------------------------------------------------------------------------
+  googleBusiness: {
+    nombre: "Mostrá Tu Negocio En Google!",
+    nombreCorto: "Ficha y Presencia en Google Maps",
+    precioBase: 26720,
+    descripcion:
+      "Configuración y optimización profesional de tu Perfil de Negocio en Google para que aparezcas primero en búsquedas y en Google Maps con dirección, fotos, horarios y enlace directo a tu WhatsApp.",
+    ventajas: [
+      {
+        icono: "📍",
+        titulo: "Aparecé primero en tu barrio y ciudad",
+        desc: "Cuando la gente busca en Google o Maps lo que ofrecés ('cerca de mí'), tu negocio figura destacado en el mapa.",
+      },
+      {
+        icono: "⭐",
+        titulo: "Opiniones y 5 estrellas de clientes",
+        desc: "Generá confianza inmediata: las reseñas de clientes reales hacen que te elijan a vos antes que a la competencia.",
+      },
+      {
+        icono: "🕒",
+        titulo: "Horarios, fotos y WhatsApp a un toque",
+        desc: "Tus clientes ven cuándo abrís, fotos de tus productos o local, y tocan un solo botón para escribirte a WhatsApp.",
+      },
+      {
+        icono: "🚀",
+        titulo: "Mostrador abierto 24/7 sin pagar abono mensual",
+        desc: "No es un anuncio pago que vence: tu ficha queda online, activa y visible de forma permanente.",
+      },
+    ],
   },
 };
